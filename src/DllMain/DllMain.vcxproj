@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\Detours\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Detours\lib.X64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Detours\lib.X86;$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>C:\Detours\include;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
