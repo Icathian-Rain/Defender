@@ -6,10 +6,10 @@
 #pragma comment(lib, "detours.lib")
 using namespace std;
 int main(int argc, char* argv[]) {
-	// wchar_t fileName[256] = L"";
-	// MultiByteToWideChar(CP_ACP, 0, argv[0], strlen(argv[1]), fileName, sizeof(fileName));
-	// wprintf(L"%s\n", fileName);
-
+	if (argc != 1)
+	{
+		return -1;
+	}
 	// 基本配置
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -29,9 +29,9 @@ int main(int argc, char* argv[]) {
 	
 
 	WCHAR EXE[MAX_PATH + 1] = { 0 };
-	// wcscpy_s(EXE, MAX_PATH, fileName);
+	swprintf_s(EXE, MAX_PATH, L"%hs", argv[0]);
 	// wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\testEXE\\X64\\Debug\\testEXE.exe");
-	wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\MFCApplication2.exe");
+	// wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\MFCApplication2.exe");
 	if (DetourCreateProcessWithDllEx(EXE, NULL, NULL, NULL, TRUE,
 		CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED, NULL, DirPath,
 		&si, &pi, DLLPath, NULL)) {
