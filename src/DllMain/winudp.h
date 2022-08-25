@@ -126,7 +126,7 @@ namespace udp
 
     void UdpClient::send(const char *buf)
     {
-        int ret = sendto(client_sock, buf, (int)strlen(buf) + 1, 0, (sockaddr*)&addr, sizeof(addr));
+        int ret = sendto(client_sock, buf, (int)strlen(buf), 0, (sockaddr*)&addr, sizeof(addr));
         if (ret == SOCKET_ERROR)
         {
             std::cout << "send error" << std::endl;

@@ -8,7 +8,7 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // udp client
-udp::UdpClient client("127.0.0.1", 3000);
+udp::UdpClient client("127.0.0.1", 4000);
 
 
 
