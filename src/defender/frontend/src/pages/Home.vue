@@ -1,5 +1,6 @@
 <template>
     <div class="flex-col">
+        <!-- 输入可执行文件 -->
         <div>
             <el-input
                 type="text"
@@ -14,6 +15,7 @@
                 >选择可执行文件</el-button
             >
         </div>
+        <!-- RunTest 或者 Kill Test -->
         <div class="h-20 mt-10 text-center">
             <el-button
                 type="success"
@@ -35,6 +37,8 @@
                 终止程序
             </el-button>
         </div>
+
+        <!-- 进度条 -->
         <div class="h-20 mt-10">
             <el-progress
                 class=""
@@ -59,11 +63,13 @@ import {
     KillTest,
 } from "../../wailsjs/go/main/App";
 
+// 初始化测试实例
 const testInstance = ref({
     filePath: "",
     isRunning: false,
 });
 
+// 初始化进度条
 const percentage = ref(0);
 const msg = ref({
     0: "未启动...",
@@ -71,6 +77,8 @@ const msg = ref({
     100: "检测完成",
 });
 
+
+// 刷新实例状态
 let refresh = () => {
     GetFilePath().then((filePath) => {
         testInstance.value.filePath = filePath;
@@ -81,12 +89,7 @@ let refresh = () => {
     });
 };
 
-let kill = () => {
-    KillTest().then((flag) => {
-        refresh();
-    });
-};
-
+// 打开文件
 let openFile = () => {
     OpenEXEDialog()
         .then((flag) => {
@@ -97,6 +100,7 @@ let openFile = () => {
         });
 };
 
+// 启动测试
 let test = () => {
     percentage.value = 50;
     RunTest()
@@ -108,5 +112,13 @@ let test = () => {
         });
 };
 
+// 停止测试
+let kill = () => {
+    KillTest().then((flag) => {
+        refresh();
+    });
+};
+
+// 刷新实例状态
 refresh();
 </script>

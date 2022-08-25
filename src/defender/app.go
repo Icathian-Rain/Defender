@@ -10,15 +10,16 @@ import (
 )
 
 // App struct
+type App struct {
+	ctx          context.Context
+	testInstance Test // Test instance
+}
+
+// Test struct
 type Test struct {
 	filePath  string
 	isRunning bool
 	pid       *os.Process
-}
-
-type App struct {
-	ctx          context.Context
-	testInstance Test
 }
 
 // NewApp creates a new App application struct
@@ -28,6 +29,7 @@ func NewApp() *App {
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
+// 初始化
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.testInstance.filePath = ""
@@ -36,14 +38,17 @@ func (a *App) startup(ctx context.Context) {
 	a.StartUDP()
 }
 
+// 获取文件路径
 func (a *App) GetFilePath() string {
 	return a.testInstance.filePath
 }
 
+// 获取进程是否在运行
 func (a *App) GetIsRunning() bool {
 	return a.testInstance.isRunning
 }
 
+// Kill Test
 func (a *App) KillTest() bool {
 	if a.testInstance.pid == nil {
 		a.testInstance.filePath = ""
@@ -62,6 +67,7 @@ func (a *App) KillTest() bool {
 	return true
 }
 
+// 打开文件
 func (a *App) OpenEXEDialog() bool {
 	filePath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Open EXE",
@@ -80,6 +86,8 @@ func (a *App) OpenEXEDialog() bool {
 	return true
 
 }
+
+// RunTest
 func (a *App) RunTest() bool {
 	if a.testInstance.filePath == "" {
 		a.testInstance.isRunning = false
@@ -108,6 +116,7 @@ func (a *App) RunTest() bool {
 	return true
 }
 
+// 开启UDP通信
 func (a *App) StartUDP() {
 	go func() {
 		udp_addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:4000")

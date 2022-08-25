@@ -5,9 +5,9 @@ import Settings from '../pages/Settings.vue';
 
 
 const routes = [
-    { path: '/', component: Home },
-    { path: '/monitor', component: Monitor },
-    { path: '/settings', component: Settings },
+    { path: '/', component: Home },                 // 首页
+    { path: '/monitor', component: Monitor },       // 监控
+    { path: '/settings', component: Settings },     // 设置
 ]
 
 const router = createRouter({
