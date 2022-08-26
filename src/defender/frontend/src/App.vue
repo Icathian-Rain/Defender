@@ -4,22 +4,14 @@ import Asiders from "./components/Asiders.vue";
 </script>
 
 <template>
-<!-- 主界面 -->
-    <div class="common-layout bg-light-50 h-full">
+    <!-- 主界面 -->
+
+    <div class="common-layout h-full">
         <el-container class="h-full">
-            <!-- header -->
-            <el-header class="h-auto" style="padding: 0px">
-                <Headers
-            /></el-header>
-            <el-container class="h-full">
-                <!-- aside -->
-                <el-aside width="200px" class="h-full">
-                    <Asiders />
-                </el-aside>
-                <!-- main -->
-                <el-main>
-                    <router-view />
-                </el-main>
+            <el-aside width="200px"><Asiders /></el-aside>
+            <el-container>
+                <el-header height="100px"><Headers /></el-header>
+                <el-main><router-view /></el-main>
             </el-container>
         </el-container>
     </div>

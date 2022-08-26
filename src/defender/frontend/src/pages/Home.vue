@@ -77,7 +77,6 @@ const msg = ref({
     100: "检测完成",
 });
 
-
 // 刷新实例状态
 let refresh = () => {
     GetFilePath().then((filePath) => {
