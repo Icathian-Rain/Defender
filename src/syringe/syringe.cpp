@@ -19,14 +19,14 @@ int main(int argc, char* argv[]) {
 
 	// 路径配置
 	WCHAR DirPath[MAX_PATH + 1];
-	/* DllMain x64
+	/*
 	wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug");	// dll文件夹
 	char DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug\\DllMain.dll"; // dll的地址
-	
 	*/
 	wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug");	// dll文件夹
 	char DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug\\DllMain.dll"; // dll的地址
-	
+
+
 
 	WCHAR EXE[MAX_PATH + 1] = { 0 };
 	swprintf_s(EXE, MAX_PATH, L"%hs", argv[0]);
