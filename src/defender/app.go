@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"defender/processInfo"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -15,11 +20,21 @@ type App struct {
 	testInstance Test // Test instance
 }
 
+type ProcessInfo struct {
+	ProcessName     string   `json:"processName"`
+	ProcessID       uint32   `json:"processID"`
+	ProcessDll      []string `json:"processDll"`
+	ProcessPriority string   `json:"processPriority"`
+}
+
 // Test struct
 type Test struct {
-	filePath  string
-	isRunning bool
-	pid       *os.Process
+	startTime   string
+	filePath    string
+	isRunning   bool
+	syringe_pid *os.Process
+	test_pid    *os.Process
+	msgs        []string
 }
 
 // NewApp creates a new App application struct
@@ -33,8 +48,11 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.testInstance.filePath = ""
+	a.testInstance.startTime = ""
 	a.testInstance.isRunning = false
-	a.testInstance.pid = nil
+	a.testInstance.syringe_pid = nil
+	a.testInstance.test_pid = nil
+	a.testInstance.msgs = make([]string, 0)
 	a.StartUDP()
 }
 
@@ -50,20 +68,18 @@ func (a *App) GetIsRunning() bool {
 
 // Kill Test
 func (a *App) KillTest() bool {
-	if a.testInstance.pid == nil {
-		a.testInstance.filePath = ""
-		a.testInstance.isRunning = false
-		return false
-	}
-	err := a.testInstance.pid.Kill()
-	if err != nil {
-		a.testInstance.filePath = ""
-		a.testInstance.isRunning = false
-		return false
-	}
 	a.testInstance.filePath = ""
+	a.testInstance.startTime = ""
 	a.testInstance.isRunning = false
-	a.testInstance.pid = nil
+	a.testInstance.msgs = make([]string, 0)
+	if a.testInstance.syringe_pid != nil {
+		a.testInstance.syringe_pid.Kill()
+		a.testInstance.syringe_pid = nil
+	}
+	if a.testInstance.test_pid != nil {
+		a.testInstance.test_pid.Kill()
+		a.testInstance.test_pid = nil
+	}
 	return true
 }
 
@@ -91,7 +107,7 @@ func (a *App) OpenEXEDialog() bool {
 func (a *App) RunTest() bool {
 	if a.testInstance.filePath == "" {
 		a.testInstance.isRunning = false
-		a.testInstance.pid = nil
+		a.testInstance.syringe_pid = nil
 		return false
 	}
 	env := os.Environ()
@@ -107,12 +123,11 @@ func (a *App) RunTest() bool {
 	if err != nil {
 		a.testInstance.filePath = ""
 		a.testInstance.isRunning = false
-		a.testInstance.pid = nil
+		a.testInstance.syringe_pid = nil
 		return false
 	}
 	a.testInstance.isRunning = true
-	a.testInstance.pid = pid
-	fmt.Printf("Process %d started...\n", pid)
+	a.testInstance.syringe_pid = pid
 	return true
 }
 
@@ -130,14 +145,73 @@ func (a *App) StartUDP() {
 			return
 		}
 		defer conn.Close()
-		buf := make([]byte, 1024)
+		buf := make([]byte, 0xffff)
 		for {
 			n, _, err := conn.ReadFromUDP(buf)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			runtime.EventsEmit(a.ctx, "UDPMessage", string(buf[0:n]))
+			timeStr := time.Now().Format("2006-01-02 15:04:05")
+			msg := string(buf[:n]) + "time\n" + timeStr
+			if strings.Contains(msg, "processID") {
+				pid := strings.Split(msg, "\n")[1]
+				pid_int, _ := strconv.Atoi(pid)
+				a.testInstance.test_pid, _ = os.FindProcess(pid_int)
+				startTime := strings.Split(msg, "\n")[3]
+				a.testInstance.startTime = startTime
+			} else {
+				a.testInstance.msgs = append(a.testInstance.msgs, msg)
+				runtime.EventsEmit(a.ctx, "UDPMessage")
+			}
 		}
 	}()
+}
+
+// 获取消息
+func (a *App) GetMsgs() []string {
+	return a.testInstance.msgs
+}
+
+// 清空消息
+func (a *App) ClearMsgs() {
+	a.testInstance.msgs = make([]string, 0)
+}
+
+// 获取注射器进程信息
+// 进程名称、进程ID、权限、加载DLL
+func (a *App) GetSyringeProcessInfo() ProcessInfo {
+	var processinfo ProcessInfo
+	processinfo.ProcessName = ""
+	processinfo.ProcessID = 0
+	processinfo.ProcessPriority = ""
+	processinfo.ProcessDll = make([]string, 0)
+	if a.testInstance.syringe_pid == nil {
+		return processinfo
+	}
+	var err error
+	processinfo.ProcessName, processinfo.ProcessID, processinfo.ProcessPriority, processinfo.ProcessDll, err = processInfo.GetProcessInfo(uint32(a.testInstance.syringe_pid.Pid), processInfo.LIST_MODULES_32BIT)
+	if err != nil {
+		return processinfo
+	}
+	return processinfo
+}
+
+// 获取测试进程信息
+// 进程名称、进程ID、权限、加载DLL
+func (a *App) GetTestProcessInfo() ProcessInfo {
+	var processinfo ProcessInfo
+	processinfo.ProcessName = ""
+	processinfo.ProcessID = 0
+	processinfo.ProcessPriority = ""
+	processinfo.ProcessDll = make([]string, 0)
+	if a.testInstance.syringe_pid == nil {
+		return processinfo
+	}
+	var err error
+	processinfo.ProcessName, processinfo.ProcessID, processinfo.ProcessPriority, processinfo.ProcessDll, err = processInfo.GetProcessInfo(uint32(a.testInstance.test_pid.Pid), processInfo.LIST_MODULES_32BIT)
+	if err != nil {
+		return processinfo
+	}
+	return processinfo
 }
