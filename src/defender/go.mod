@@ -1,4 +1,4 @@
-module changeme
+module defender
 
 go 1.17
 
