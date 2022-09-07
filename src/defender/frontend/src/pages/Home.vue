@@ -1,7 +1,7 @@
 <template>
     <div class="flex-col">
         <!-- 输入可执行文件 -->
-        <div>
+        <div class="w-full">
             <el-input
                 type="text"
                 placeholder="请输入可执行文件路径"
@@ -11,7 +11,7 @@
             <el-button
                 type="primary"
                 v-on:click="openFile()"
-                class="inline absolute right-3"
+                class="left-15 relative"
                 >选择可执行文件</el-button
             >
         </div>
@@ -49,6 +49,19 @@
                 <span>{{ msg[percentage] }}</span>
             </el-progress>
         </div>
+        <div
+            class="flex flex-row justify-around"
+            v-if="testInstance.isRunning === true"
+        >
+            <ProcessInfo
+                class="w-2/5"
+                :processInfo="testInstance.syringe_info"
+            />
+            <ProcessInfo
+                class="w-2/5"
+                :processInfo="testInstance.testInstance_info"
+            />
+        </div>
     </div>
 </template>
 
@@ -61,12 +74,27 @@ import {
     GetFilePath,
     GetIsRunning,
     KillTest,
+    GetSyringeProcessInfo,
+    GetTestProcessInfo,
 } from "../../wailsjs/go/main/App";
+import ProcessInfo from "../components/ProcessInfo.vue";
 
 // 初始化测试实例
 const testInstance = ref({
     filePath: "",
     isRunning: false,
+    syringe_info: {
+        processName: "",
+        processID: 0,
+        processDll: [],
+        processPriority: "",
+    },
+    testInstance_info: {
+        processName: "",
+        processID: 0,
+        processDll: [],
+        processPriority: "",
+    },
 });
 
 // 初始化进度条
@@ -86,6 +114,22 @@ let refresh = () => {
         testInstance.value.isRunning = isRunning;
         percentage.value = isRunning ? 100 : 0;
     });
+    GetSyringeProcessInfo().then(
+        (processinfo) => {
+            testInstance.value.syringe_info.processName = processinfo.processName;
+            testInstance.value.syringe_info.processID = processinfo.processID;
+            testInstance.value.syringe_info.processDll = processinfo.processDll;
+            testInstance.value.syringe_info.processPriority = processinfo.processPriority;
+        }
+    );
+    GetTestProcessInfo().then(
+        (processinfo) => {
+            testInstance.value.testInstance_info.processName = processinfo.processName;
+            testInstance.value.testInstance_info.processID = processinfo.processID;
+            testInstance.value.testInstance_info.processDll = processinfo.processDll;
+            testInstance.value.testInstance_info.processPriority = processinfo.processPriority;
+        }
+    );
 };
 
 // 打开文件
@@ -104,7 +148,9 @@ let test = () => {
     percentage.value = 50;
     RunTest()
         .then((flag) => {
-            refresh();
+            setTimeout(function () {
+                refresh();
+            }, 500);
         })
         .catch((err) => {
             console.log(err);
