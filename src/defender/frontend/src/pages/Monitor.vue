@@ -33,19 +33,10 @@ const size = ref(6);
 const now_page = ref(1);
 
 let reFreshMsgs = () => {
-    msgs.value.splice(0, msgs.value.length);
     GetMsgs().then((data) => {
+        msgs.value = [];
         for (let i = 0; i < data.length; i++) {
-            let msg = Object();
-            let info = Object();
-            let items = data[i].split("\n");
-            msg["id"] = i;
-            msg[items[0]] = items[1];
-            for (let j = 2; j < items.length; j = j + 2) {
-                info[items[j]] = items[j + 1];
-            }
-            msg["info"] = info;
-            msgs.value.push(msg);
+            msgs.value.push(JSON.parse(data[i]));
         }
     });
 };
@@ -53,6 +44,7 @@ let reFreshMsgs = () => {
 EventsOn("UDPMessage", () => {
     reFreshMsgs();
 });
+
 
 reFreshMsgs();
 </script>
