@@ -2,8 +2,9 @@
 #include "pch.h"
 #include "framework.h"
 #include "detours.h"
+#include <atlstr.h>
 #include "winudp.h"
-#include <sstream>
+#include "msg.h"
 
 // lib
 #pragma comment(lib, "detours.lib")
@@ -48,6 +49,39 @@ udp::UdpClient client("127.0.0.1", 4000);
 // // udp
 // #define sendto 23
 // #define recvfrom 24
+std::string GbkToUtf8(const char *src_str)
+{
+	int len = MultiByteToWideChar(CP_ACP, 0, src_str, -1, NULL, 0);
+	wchar_t* wstr = new wchar_t[len + 1];
+	memset(wstr, 0, len + 1);
+	MultiByteToWideChar(CP_ACP, 0, src_str, -1, wstr, len);
+	len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+	char* str = new char[len + 1];
+	memset(str, 0, len + 1);
+	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, NULL, NULL);
+	std::string strTemp = str;
+	if (wstr) delete[] wstr;
+	if (str) delete[] str;
+	return strTemp;
+}
+
+std::string Utf8ToGbk(const char *src_str)
+{
+	int len = MultiByteToWideChar(CP_UTF8, 0, src_str, -1, NULL, 0);
+	wchar_t* wszGBK = new wchar_t[len + 1];
+	memset(wszGBK, 0, len * 2 + 2);
+	MultiByteToWideChar(CP_UTF8, 0, src_str, -1, wszGBK, len);
+	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
+	char* szGBK = new char[len + 1];
+	memset(szGBK, 0, len + 1);
+	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
+	std::string strTemp(szGBK);
+	if (wszGBK) delete[] wszGBK;
+	if (szGBK) delete[] szGBK;
+	return strTemp;
+}
+
+
 
 // MessageBox
 // MessageBoxA
@@ -57,6 +91,8 @@ static int(WINAPI *OldMessageBoxA)(
     _In_opt_ LPCSTR lpCaption,
     _In_ UINT uType) = MessageBoxA;
 
+
+
 extern "C" __declspec(dllexport) int WINAPI NewMessageBoxA(
     _In_opt_ HWND hWnd,        // 窗口句柄，代表这个消息窗口的所有者
     _In_opt_ LPCSTR lpText,    // 填入窗口的字符串 char *
@@ -64,20 +100,18 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxA(
     _In_ UINT uType            // button
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nMessageBoxA\n"
-        << "hWnd\n"
-        << hWnd << "\n"
-        << "lpText\n"
-        << lpText << "\n"
-        << "lpCaption\n"
-        << lpCaption << "\n"
-        << "uType\n"
-        << uType << "\n";
-    client.send(oss.str().c_str());
-    // return OldMessageBoxA(hWnd, lpText, lpCaption, uType);
-    return OldMessageBoxA(hWnd, "123456", "hook", uType);
+    std::string lpText_tmp = GbkToUtf8(lpText);
+    std::string lpCaption_tmp = GbkToUtf8(lpCaption);
+    Msg msg("MessageBoxA");
+    msg.setItem("hWnd", std::to_string((int)hWnd));
+    msg.setItem("lpText", lpText_tmp);
+    msg.setItem("lpCaption", lpCaption_tmp);
+    msg.setItem("uType", std::to_string(uType));
+    client.send(msg.getMsg().c_str());
+    return OldMessageBoxA(hWnd, lpText, lpCaption, uType);
+    // return OldMessageBoxA(hWnd, "1234", "hook", uType);
 }
+
 
 // MessageBoxW
 static int(WINAPI *OldMessageBoxW)(_In_opt_ HWND hWnd, _In_opt_ LPCWSTR lpText, _In_opt_ LPCWSTR lpCaption, _In_ UINT uType) = MessageBoxW;
@@ -88,17 +122,15 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxW(
     _In_ UINT uType             // button
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nMessageBoxW\n"
-        << "hWnd\n"
-        << hWnd << "\n"
-        << "lpText\n"
-        << lpText << "\n"
-        << "lpCaption\n"
-        << lpCaption << "\n"
-        << "uType\n"
-        << uType << "\n";
-    client.send(oss.str().c_str());
+    
+    std::string lpText_tmp = std::string(CW2A(lpText, CP_UTF8));
+    std::string lpCaption_tmp = std::string(CW2A(lpCaption, CP_UTF8));
+    Msg msg("MessageBoxW");
+    msg.setItem("hWnd", std::to_string((int)hWnd));
+    msg.setItem("lpText", lpText_tmp);
+    msg.setItem("lpCaption", lpCaption_tmp);
+    msg.setItem("uType", std::to_string(uType));
+    client.send(msg.getMsg().c_str());
     return OldMessageBoxW(hWnd, lpText, lpCaption, uType);
 }
 
@@ -122,22 +154,17 @@ extern "C" __declspec(dllexport) HANDLE WINAPI NewCreateFile(
     HANDLE hTemplateFile                        // 如果不为0则指定一个文件句柄，复制扩展属性
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nCreateFile\n"
-        << "lpFileName\n"
-        << lpFileName << "\n"
-        << "dwDesiredAccess\n"
-        << dwDesiredAccess << "\n"
-        << "dwShareMode\n"
-        << dwShareMode << "\n"
-        << "lpSecurityAttributes\n"
-        << lpSecurityAttributes << "\n"
-        << "dwCreationDisposition\n"
-        << dwCreationDisposition << "\n"
-        << "dwFlagsAndAttributes\n"
-        << dwFlagsAndAttributes << "\n"
-        << "hTemplateFile\n"
-        << hTemplateFile << "\n";
+    std::string lpFileName_tmp = std::string(CW2A(lpFileName, CP_UTF8));
+    Msg msg("CreateFile");
+    msg.setItem("lpFileName", lpFileName_tmp);
+    msg.setItem("dwDesiredAccess", std::to_string(dwDesiredAccess));
+    msg.setItem("dwShareMode", std::to_string(dwShareMode));
+    msg.setItem("lpSecurityAttributes", std::to_string((int)lpSecurityAttributes));
+    msg.setItem("dwCreationDisposition", std::to_string(dwCreationDisposition));
+    msg.setItem("dwFlagsAndAttributes", std::to_string(dwFlagsAndAttributes));
+    msg.setItem("hTemplateFile", std::to_string((int)hTemplateFile));
+    client.send(msg.getMsg().c_str());
+
     return OldCreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
@@ -156,18 +183,15 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
     LPOVERLAPPED lpOverlapped       // 指向重叠I/O结构的指针
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nWriteFile\n"
-        << "hFile\n"
-        << hFile << "\n"
-        << "lpBuffer\n"
-        << lpBuffer << "\n"
-        << "nNumberOfBytesToWrite\n"
-        << nNumberOfBytesToWrite << "\n"
-        << "lpNumberOfBytesWritten\n"
-        << lpNumberOfBytesWritten << "\n"
-        << "lpOverlapped\n"
-        << lpOverlapped << "\n";
+    Msg msg("WriteFile");
+    // std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
+    msg.setItem("hFile", std::to_string((int)hFile));
+    msg.setItem("lpBuffer", std::to_string((int)lpBuffer));
+    msg.setItem("nNumberOfBytesToWrite", std::to_string(nNumberOfBytesToWrite));
+    msg.setItem("lpNumberOfBytesWritten", std::to_string((int)lpNumberOfBytesWritten));
+    msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
+    client.send(msg.getMsg().c_str());
+
     return OldWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 }
 
@@ -186,18 +210,14 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewReadFile(
     LPOVERLAPPED lpOverlapped    // 指向重叠I/O结构的指针
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nReadFile\n"
-        << "hFile\n"
-        << hFile << "\n"
-        << "lpBuffer\n"
-        << lpBuffer << "\n"
-        << "nNumberOfBytesToRead\n"
-        << nNumberOfBytesToRead << "\n"
-        << "lpNumberOfBytesRead\n"
-        << lpNumberOfBytesRead << "\n"
-        << "lpOverlapped\n"
-        << lpOverlapped << "\n";
+    Msg msg("ReadFile");
+    // std::string lpBuffer_tmp((char *)lpBuffer);
+    msg.setItem("hFile", std::to_string((int)hFile));
+    msg.setItem("lpBuffer", std::to_string((int)lpBuffer));
+    msg.setItem("nNumberOfBytesToRead", std::to_string(nNumberOfBytesToRead));
+    msg.setItem("lpNumberOfBytesRead", std::to_string((int)lpNumberOfBytesRead));
+    msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
+    client.send(msg.getMsg().c_str());
     return OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 }
 
@@ -214,14 +234,11 @@ extern "C" __declspec(dllexport) HANDLE WINAPI NewHeapCreate(
     SIZE_T dwMaximumSize  // 堆最大OldHeapFree能增长到的字节数
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nHeapCreate\n"
-        << "fIOoptions\n"
-        << fIOoptions << "\n"
-        << "dwInitialSize\n"
-        << dwInitialSize << "\n"
-        << "dwMaximumSize\n"
-        << dwMaximumSize << "\n";
+    Msg msg("HeapCreate");
+    msg.setItem("fIOoptions", std::to_string(fIOoptions));
+    msg.setItem("dwInitialSize", std::to_string(dwInitialSize));
+    msg.setItem("dwMaximumSize", std::to_string(dwMaximumSize));
+    client.send(msg.getMsg().c_str());
     return OldHeapCreate(fIOoptions, dwInitialSize, dwMaximumSize);
 }
 
@@ -231,10 +248,9 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapDestory(
     HANDLE hHeap // 要销毁堆的句柄
 )
 {
-    std::ostringstream oss;
-    oss << "funcName\nHeapDestroy\n"
-        << "hHeap\n"
-        << hHeap << "\n";
+    Msg msg("HeapDestory");
+    msg.setItem("hHeap", std::to_string((int)hHeap));
+    client.send(msg.getMsg().c_str());
     return OldHeapDestory(hHeap);
 }
 
@@ -253,15 +269,11 @@ extern "C" __declspec(dllexport) LPVOID WINAPI NewHeapAlloc(
     if (isAlloc == false)
     {
         isAlloc = true;
-        std::ostringstream oss;
-        oss << "funcName\nHeapAlloc\n"
-            << "hHeap\n"
-            << hHeap << "\n"
-            << "dwFlags\n"
-            << dwFlags << "\n"
-            << "dwBytes\n"
-            << dwBytes << "\n";
-        client.send(oss.str().c_str());
+        Msg msg("HeapAlloc");
+        msg.setItem("hHeap", std::to_string((int)hHeap));
+        msg.setItem("dwFlags", std::to_string(dwFlags));
+        msg.setItem("dwBytes", std::to_string(dwBytes));
+        client.send(msg.getMsg().c_str());
     }
     else
         isAlloc = false;
@@ -283,15 +295,11 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapFree(
     if (isFree == false)
     {
         isFree = true;
-        std::ostringstream oss;
-        oss << "funcName\nHeapFree\n"
-            << "hHeap\n"
-            << hHeap << "\n"
-            << "dwFlags\n"
-            << dwFlags << "\n"
-            << "lpMem\n"
-            << lpMem << "\n";
-        client.send(oss.str().c_str());
+        Msg msg("HeapFree");
+        msg.setItem("hHeap", std::to_string((int)hHeap));
+        msg.setItem("dwFlags", std::to_string(dwFlags));
+        msg.setItem("lpMem", std::to_string((int)lpMem));
+        client.send(msg.getMsg().c_str());
     }
     else
         isFree = false;
@@ -322,27 +330,19 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCreateKeyEx(
     PHKEY phkResult,
     LPDWORD lpdwDisposition)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegCreateKeyEx\n"
-        << "hKey\n"
-        << hKey << "\n"
-        << "lpSubKey\n"
-        << lpSubKey << "\n"
-        << "Reserved\n"
-        << Reserved << "\n"
-        << "lpClass\n"
-        << lpClass << "\n"
-        << "dwOptions\n"
-        << dwOptions << "\n"
-        << "samDesired\n"
-        << samDesired << "\n"
-        << "lpSecurityAttributes\n"
-        << lpSecurityAttributes << "\n"
-        << "phkResult\n"
-        << phkResult << "\n"
-        << "lpdwDisposition\n"
-        << lpdwDisposition << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegCreateKeyEx");
+    std::string lpSubKey_tmp = std::string(CW2A(lpSubKey, CP_UTF8));
+    std::string lpClass_tmp = std::string(CW2A(lpClass, CP_UTF8));
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpSubKey", lpSubKey_tmp);
+    msg.setItem("Reserved", std::to_string(Reserved));
+    msg.setItem("lpClass", lpClass_tmp);
+    msg.setItem("dwOptions", std::to_string(dwOptions));
+    msg.setItem("samDesired", std::to_string(samDesired));
+    msg.setItem("lpSecurityAttributes", std::to_string((int)lpSecurityAttributes));
+    msg.setItem("phkResult", std::to_string((int)phkResult));
+    msg.setItem("lpdwDisposition", std::to_string((int)lpdwDisposition));
+    client.send(msg.getMsg().c_str());
     return OldRegCreateKeyEx(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
 }
 
@@ -363,21 +363,15 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegSetValueEx(
     const BYTE *lpData,
     DWORD cbData)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegSetValueEx\n"
-        << "hKey\n"
-        << hKey << "\n"
-        << "lpValueName\n"
-        << lpValueName << "\n"
-        << "Reserved\n"
-        << Reserved << "\n"
-        << "dwType\n"
-        << dwType << "\n"
-        << "lpData\n"
-        << lpData << "\n"
-        << "cbData\n"
-        << cbData << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegSetValueEx");
+    std::string lpValueName_tmp = std::string(CW2A(lpValueName, CP_UTF8));
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpValueName", lpValueName_tmp);
+    msg.setItem("Reserved", std::to_string(Reserved));
+    msg.setItem("dwType", std::to_string(dwType));
+    msg.setItem("lpData", std::to_string((int)lpData));
+    msg.setItem("cbData", std::to_string(cbData));
+    client.send(msg.getMsg().c_str());
     return OldRegSetValueEx(hKey, lpValueName, Reserved, dwType, lpData, cbData);
 }
 
@@ -396,19 +390,13 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegOpenKeyEx(
     REGSAM samDesired,
     PHKEY phkResult)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegOpenKeyEx\n"
-        << "hKey\n"
-        << hKey << "\n"
-        << "lpSubKey\n"
-        << lpSubKey << "\n"
-        << "ulOptions\n"
-        << ulOptions << "\n"
-        << "samDesired\n"
-        << samDesired << "\n"
-        << "phkResult\n"
-        << phkResult << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegOpenKeyEx");
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpSubKey", std::to_string((int)lpSubKey));
+    msg.setItem("ulOptions", std::to_string(ulOptions));
+    msg.setItem("samDesired", std::to_string(samDesired));
+    msg.setItem("phkResult", std::to_string((int)phkResult));
+    client.send(msg.getMsg().c_str());
     return OldRegOpenKeyEx(hKey, lpSubKey, ulOptions, samDesired, phkResult);
 }
 
@@ -419,11 +407,9 @@ static LSTATUS(WINAPI *OldRegCloseKey)(
 extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCloseKey(
     HKEY hKey)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegCloseKey\n"
-        << "hKey\n"
-        << hKey << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegCloseKey");
+    msg.setItem("hKey", std::to_string((int)hKey));
+    client.send(msg.getMsg().c_str());
     return OldRegCloseKey(hKey);
 }
 
@@ -436,13 +422,10 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegDeleteKey(
     HKEY hKey,
     LPCWSTR lpSubKey)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegDeleteKey\n"
-        << "hKey\n"
-        << hKey << "\n"
-        << "lpSubKey\n"
-        << lpSubKey << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegDeleteKey");
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpSubKey", std::to_string((int)lpSubKey));
+    client.send(msg.getMsg().c_str());
     return OldRegDeleteKey(hKey, lpSubKey);
 }
 
@@ -455,13 +438,10 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegDeleteValue(
     HKEY hKey,
     LPCWSTR lpValueName)
 {
-    std::ostringstream oss;
-    oss << "funcName\nRegDeleteValue\n"
-        << "hKey\n"
-        << hKey << "\n"
-        << "lpValueName\n"
-        << lpValueName << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("RegDeleteValue");
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpValueName", std::to_string((int)lpValueName));
+    client.send(msg.getMsg().c_str());
     return OldRegDeleteValue(hKey, lpValueName);
 }
 
@@ -473,15 +453,11 @@ static SOCKET(WINAPI *Oldsocket)(
     ) = socket;
 extern "C" __declspec(dllexport) SOCKET WINAPI Newsocket(int af, int type, int protocol)
 {
-    std::ostringstream oss;
-    oss << "funcName\nsocket\n"
-        << "af\n"
-        << af << "\n"
-        << "type\n"
-        << type << "\n"
-        << "protocol\n"
-        << protocol << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("socket");
+    msg.setItem("af", std::to_string(af));
+    msg.setItem("type", std::to_string(type));
+    msg.setItem("protocol", std::to_string(protocol));
+    client.send(msg.getMsg().c_str());
     return Oldsocket(af, type, protocol);
 }
 
@@ -493,15 +469,11 @@ static int(WINAPI *Oldbind)(
     ) = bind;
 extern "C" __declspec(dllexport) int WINAPI Newbind(SOCKET s, const sockaddr *name, int namelen)
 {
-    std::ostringstream oss;
-    oss << "funcName\nbind\n"
-        << "s\n"
-        << s << "\n"
-        << "name\n"
-        << name << "\n"
-        << "namelen\n"
-        << namelen << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("bind");
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("name", std::to_string((int)name));
+    msg.setItem("namelen", std::to_string(namelen));
+    client.send(msg.getMsg().c_str());
     return Oldbind(s, name, namelen);
 }
 
@@ -512,13 +484,10 @@ static int(WINAPI *Oldlisten)(
     ) = listen;
 extern "C" __declspec(dllexport) int WINAPI Newlisten(SOCKET s, int backlog)
 {
-    std::ostringstream oss;
-    oss << "funcName\nlisten\n"
-        << "s\n"
-        << s << "\n"
-        << "backlog\n"
-        << backlog << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("listen");
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("backlog", std::to_string(backlog));
+    client.send(msg.getMsg().c_str());
     return Oldlisten(s, backlog);
 }
 
@@ -530,15 +499,11 @@ static SOCKET(WINAPI *Oldaccept)(
     ) = accept;
 extern "C" __declspec(dllexport) SOCKET WINAPI Newaccept(SOCKET s, sockaddr *addr, int *addrlen)
 {
-    std::ostringstream oss;
-    oss << "funcName\naccept\n"
-        << "s\n"
-        << s << "\n"
-        << "addr\n"
-        << addr << "\n"
-        << "addrlen\n"
-        << addrlen << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("accept");
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("addr", std::to_string((int)addr));
+    msg.setItem("addrlen", std::to_string((int)addrlen));
+    client.send(msg.getMsg().c_str());
     return Oldaccept(s, addr, addrlen);
 }
 
@@ -550,15 +515,11 @@ static int(WINAPI *Oldconnect)(
     ) = connect;
 extern "C" __declspec(dllexport) int WINAPI Newconnect(SOCKET s, const sockaddr *name, int namelen)
 {
-    std::ostringstream oss;
-    oss << "funcName\nconnect\n"
-        << "s\n"
-        << s << "\n"
-        << "name\n"
-        << name << "\n"
-        << "namelen\n"
-        << namelen << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("connect");
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("name", std::to_string((int)name));
+    msg.setItem("namelen", std::to_string(namelen));
+    client.send(msg.getMsg().c_str());
     return Oldconnect(s, name, namelen);
 }
 
@@ -571,17 +532,13 @@ static int(WINAPI *Oldsend)(
     ) = send;
 extern "C" __declspec(dllexport) int WINAPI Newsend(SOCKET s, const char *buf, int len, int flags)
 {
-    std::ostringstream oss;
-    oss << "funcName\nsend\n"
-        << "s\n"
-        << s << "\n"
-        << "buf\n"
-        << buf << "\n"
-        << "len\n"
-        << len << "\n"
-        << "flags\n"
-        << flags << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("send");
+    std::string buf_tmp(buf, len);
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("buf", buf_tmp);
+    msg.setItem("len", std::to_string(len));
+    msg.setItem("flags", std::to_string(flags));
+    client.send(msg.getMsg().c_str());
     return Oldsend(s, buf, len, flags);
 }
 
@@ -594,17 +551,13 @@ static int(WINAPI *Oldrecv)(
     ) = recv;
 extern "C" __declspec(dllexport) int WINAPI Newrecv(SOCKET s, char *buf, int len, int flags)
 {
-    std::ostringstream oss;
-    oss << "funcName\nrecv\n"
-        << "s\n"
-        << s << "\n"
-        << "buf\n"
-        << buf << "\n"
-        << "len\n"
-        << len << "\n"
-        << "flags\n"
-        << flags << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("recv");
+    std::string buf_tmp(buf, len);
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("buf", buf_tmp);
+    msg.setItem("len", std::to_string(len));
+    msg.setItem("flags", std::to_string(flags));
+    client.send(msg.getMsg().c_str());
     return Oldrecv(s, buf, len, flags);
 }
 
@@ -619,21 +572,15 @@ static int(WINAPI *Oldsendto)(
     ) = sendto;
 extern "C" __declspec(dllexport) int WINAPI Newsendto(SOCKET s, const char *buf, int len, int flags, const sockaddr *to, int tolen)
 {
-    std::ostringstream oss;
-    oss << "funcName\nsendto\n"
-        << "s\n"
-        << s << "\n"
-        << "buf\n"
-        << buf << "\n"
-        << "len\n"
-        << len << "\n"
-        << "flags\n"
-        << flags << "\n"
-        << "to\n"
-        << to << "\n"
-        << "tolen\n"
-        << tolen << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("sendto");
+    std::string buf_tmp(buf, len);
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("buf", buf_tmp);
+    msg.setItem("len", std::to_string(len));
+    msg.setItem("flags", std::to_string(flags));
+    msg.setItem("to", std::to_string((int)to));
+    msg.setItem("tolen", std::to_string(tolen));
+    client.send(msg.getMsg().c_str());
     return Oldsendto(s, buf, len, flags, to, tolen);
 }
 
@@ -648,21 +595,15 @@ static int(WINAPI *Oldrecvfrom)(
     ) = recvfrom;
 extern "C" __declspec(dllexport) int WINAPI Newrecvfrom(SOCKET s, char *buf, int len, int flags, sockaddr *from, int *fromlen)
 {
-    std::ostringstream oss;
-    oss << "funcName\nrecvfrom\n"
-        << "s\n"
-        << s << "\n"
-        << "buf\n"
-        << buf << "\n"
-        << "len\n"
-        << len << "\n"
-        << "flags\n"
-        << flags << "\n"
-        << "from\n"
-        << from << "\n"
-        << "fromlen\n"
-        << fromlen << "\n";
-    client.send(oss.str().c_str());
+    Msg msg("recvfrom");
+    std::string buf_tmp(buf, len);
+    msg.setItem("s", std::to_string(s));
+    msg.setItem("buf", buf_tmp);
+    msg.setItem("len", std::to_string(len));
+    msg.setItem("flags", std::to_string(flags));
+    msg.setItem("from", std::to_string((int)from));
+    msg.setItem("fromlen", std::to_string((int)fromlen));
+    client.send(msg.getMsg().c_str());
     return Oldrecvfrom(s, buf, len, flags, from, fromlen);
 }
 
@@ -674,15 +615,11 @@ extern "C" __declspec(dllexport) int WINAPI Newrecvfrom(SOCKET s, char *buf, int
 //     ) = memcpy;
 // extern "C" __declspec(dllexport) void *__cdecl Newmemcpy(void *_Dst, const void *_Src, size_t _Size)
 // {
-//     std::ostringstream oss;
-//     oss << "funcName\nmemcpy\n"
-//         << "_Dst\n"
-//         << _Dst << "\n"
-//         << "_Src\n"
-//         << _Src << "\n"
-//         << "_Size\n"
-//         << _Size << "\n";
-//     client.send(oss.str().c_str());
+//     Msg msg("memcpy");
+//     msg.setItem("Dst", std::to_string((int)_Dst));
+//     msg.setItem("Src", std::to_string((int)_Src));
+//     msg.setItem("Size", std::to_string(_Size));
+//     client.send(msg.getMsg().c_str());
 //     return Oldmemcpy(_Dst, _Src, _Size);
 // }
 
@@ -703,10 +640,9 @@ BOOL WINAPI DllMain(HMODULE hModule,
     {
     case DLL_PROCESS_ATTACH:
     {
-        std::ostringstream oss;
-        oss << "processID\n"
-            << GetCurrentProcessId() << "\n";
-        client.send(oss.str().c_str());
+        std::string msg = "{\n \"processID\": " + std::to_string(GetCurrentProcessId()) + ",\n";
+        msg += " \"time\": \"" + getCurrentTime() + "\"\n}";
+        client.send(msg.c_str());
         DisableThreadLibraryCalls(hModule);
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
