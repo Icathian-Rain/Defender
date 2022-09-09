@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"defender/processInfo"
 
@@ -25,6 +24,11 @@ type ProcessInfo struct {
 	ProcessID       uint32   `json:"processID"`
 	ProcessDll      []string `json:"processDll"`
 	ProcessPriority string   `json:"processPriority"`
+}
+
+type Process struct {
+	ProcessID uint32
+	Time      string
 }
 
 // Test struct
@@ -152,15 +156,15 @@ func (a *App) StartUDP() {
 				fmt.Println(err)
 				return
 			}
-			timeStr := time.Now().Format("2006-01-02 15:04:05")
-			msg := string(buf[:n]) + "time\n" + timeStr
+			msg := string(buf[:n])
 			if strings.Contains(msg, "processID") {
-				pid := strings.Split(msg, "\n")[1]
-				pid_int, _ := strconv.Atoi(pid)
-				a.testInstance.test_pid, _ = os.FindProcess(pid_int)
-				startTime := strings.Split(msg, "\n")[3]
-				a.testInstance.startTime = startTime
+				var process Process
+				json.Unmarshal([]byte(msg), &process)
+				a.testInstance.test_pid, _ = os.FindProcess(int(process.ProcessID))
+				a.testInstance.startTime = process.Time
 			} else {
+				fmt.Print(len(a.testInstance.msgs))
+				// fmt.Println(msg)
 				a.testInstance.msgs = append(a.testInstance.msgs, msg)
 				runtime.EventsEmit(a.ctx, "UDPMessage")
 			}
