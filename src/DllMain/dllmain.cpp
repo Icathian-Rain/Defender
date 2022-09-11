@@ -552,7 +552,7 @@ static int(WINAPI *Oldrecv)(
 extern "C" __declspec(dllexport) int WINAPI Newrecv(SOCKET s, char *buf, int len, int flags)
 {
     Msg msg("recv");
-    std::string buf_tmp(buf, len);
+    std::string buf_tmp(buf);
     msg.setItem("s", std::to_string(s));
     msg.setItem("buf", buf_tmp);
     msg.setItem("len", std::to_string(len));
