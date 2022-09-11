@@ -53,6 +53,8 @@ std::string my_replace(const std::string& str, const std::string& old_value, con
 
 void Msg::setItem(const std::string& key, const std::string& value)
 {
+    std::string temp_key = key;
+    std::string temp_value = value;
     if(flag == 1)
     {
         m_msg += ",";
@@ -61,7 +63,12 @@ void Msg::setItem(const std::string& key, const std::string& value)
     {
         flag = 1;
     }
-    m_msg += "\n\"" + base64_encode(my_replace(key)) + "\": \"" + base64_encode(my_replace(value)) + "\"";
+    // temp_key = my_replace(temp_key, "\\", "\\\\");
+    temp_key = base64_encode(temp_key);
+    // temp_value = my_replace(temp_value, "\\", "\\\\");
+    temp_value = base64_encode(temp_value);
+
+    m_msg += "\n\"" + temp_key + "\": \"" + temp_value + "\"";
 }
 
 std::string Msg::getMsg()
