@@ -1,19 +1,18 @@
+
+import { Base64 } from 'js-base64';
+
 function getEncode64(str) {
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }));
+    return Base64.encode(str);
 }
 
 
 function getDecode(str){
     let res;
     try{
-        res = decodeURIComponent(atob(str).split('').map(function (c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        res = Base64.decode(str);
     } catch(err) {
-        res = "编码错误";
+        console.log(err);
+        res = "解码错误";
     }
     return res
 }

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "element-plus": "^2.2.14",
+    "js-base64": "^3.7.2",
     "vue": "^3.2.25",
     "vue-router": "^4.1.4"
   },
