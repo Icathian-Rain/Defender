@@ -39,14 +39,14 @@ Msg::~Msg()
 {
 }
 
-std::string my_replace(const std::string& str)
+std::string my_replace(const std::string& str, const std::string& old_value, const std::string& new_value)
 {
     std::string str1 = str;
     std::string::size_type pos = 0;
-    while((pos = str1.find("\\", pos)) != std::string::npos)
+    while((pos = str1.find(old_value.c_str(), pos)) != std::string::npos)
     {
-        str1.replace(pos, 1, "\\\\");
-        pos += 2;
+        str1.replace(pos, 1, new_value.c_str());
+        pos += new_value.length();
     }
     return str1;
 }
