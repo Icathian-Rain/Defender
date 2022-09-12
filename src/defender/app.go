@@ -163,7 +163,6 @@ func (a *App) StartUDP() {
 				a.testInstance.test_pid, _ = os.FindProcess(int(process.ProcessID))
 				a.testInstance.startTime = process.Time
 			} else {
-				fmt.Print(len(a.testInstance.msgs))
 				// fmt.Println(msg)
 				a.testInstance.msgs = append(a.testInstance.msgs, msg)
 				runtime.EventsEmit(a.ctx, "UDPMessage")
