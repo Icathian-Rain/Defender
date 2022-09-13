@@ -95,7 +95,7 @@ namespace udp
     {
         WSADATA wsadata;
         WSAStartup(MAKEWORD(2, 2), &wsadata);
-        client_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        client_sock = socket(AF_INET, SOCK_DGRAM, 0);
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port_dst);

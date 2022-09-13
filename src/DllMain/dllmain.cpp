@@ -119,17 +119,17 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxW(
     _In_opt_ HWND hWnd,         // OldMessageBoxA
     _In_opt_ LPCWSTR lpText,    // 填入窗口的字符串 wchar *
     _In_opt_ LPCWSTR lpCaption, // 填入窗口的标题	wchar *
-    _In_ UINT uType             // button
+    _In_ UINT uType             // 类型
 )
 {
     
     std::string lpText_tmp = std::string(CW2A(lpText, CP_UTF8));
     std::string lpCaption_tmp = std::string(CW2A(lpCaption, CP_UTF8));
     Msg msg("MessageBoxW");
-    msg.setItem("hWnd", std::to_string((int)hWnd));
-    msg.setItem("lpText", lpText_tmp);
-    msg.setItem("lpCaption", lpCaption_tmp);
-    msg.setItem("uType", std::to_string(uType));
+    msg.setItem("hWnd 窗口句柄", std::to_string((int)hWnd));
+    msg.setItem("lpText 字符串", lpText_tmp);
+    msg.setItem("lpCaption 标题", lpCaption_tmp);
+    msg.setItem("uType 类型", std::to_string(uType));
     client.send(msg.getMsg().c_str());
     return OldMessageBoxW(hWnd, lpText, lpCaption, uType);
 }
@@ -156,8 +156,8 @@ extern "C" __declspec(dllexport) HANDLE WINAPI NewCreateFile(
 {
     std::string lpFileName_tmp = std::string(CW2A(lpFileName, CP_UTF8));
     Msg msg("CreateFile");
-    msg.setItem("lpFileName", lpFileName_tmp);
-    msg.setItem("dwDesiredAccess", std::to_string(dwDesiredAccess));
+    msg.setItem("lpFileName 文件名", lpFileName_tmp);
+    msg.setItem("dwDesiredAccess 权限管理", std::to_string(dwDesiredAccess));
     msg.setItem("dwShareMode", std::to_string(dwShareMode));
     msg.setItem("lpSecurityAttributes", std::to_string((int)lpSecurityAttributes));
     msg.setItem("dwCreationDisposition", std::to_string(dwCreationDisposition));
@@ -671,32 +671,32 @@ BOOL WINAPI DllMain(HMODULE hModule,
     {
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
-        DetourDetach(&(PVOID &)OldMessageBoxA, NewMessageBoxA);
-        DetourDetach(&(PVOID &)OldMessageBoxW, NewMessageBoxW);
+        // DetourDetach(&(PVOID &)OldMessageBoxA, NewMessageBoxA);
+        // DetourDetach(&(PVOID &)OldMessageBoxW, NewMessageBoxW);
 
-        DetourDetach(&(PVOID &)OldCreateFile, NewCreateFile);
-        DetourDetach(&(PVOID &)OldWriteFile, NewWriteFile);
-        DetourDetach(&(PVOID &)OldReadFile, NewReadFile);
+        // DetourDetach(&(PVOID &)OldCreateFile, NewCreateFile);
+        // DetourDetach(&(PVOID &)OldWriteFile, NewWriteFile);
+        // DetourDetach(&(PVOID &)OldReadFile, NewReadFile);
 
-        DetourDetach(&(PVOID &)OldHeapCreate, NewHeapCreate);
-        DetourDetach(&(PVOID &)OldHeapDestory, NewHeapDestory);
-        DetourDetach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
+        // DetourDetach(&(PVOID &)OldHeapCreate, NewHeapCreate);
+        // DetourDetach(&(PVOID &)OldHeapDestory, NewHeapDestory);
+        // DetourDetach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
         // DetourDetach(&(PVOID&)OldHeapFree, NewHeapFree);
 
-        DetourDetach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
-        DetourDetach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
-        DetourDetach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
-        DetourDetach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
-        DetourDetach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
-        DetourDetach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
+        // DetourDetach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
+        // DetourDetach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
+        // DetourDetach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
+        // DetourDetach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
+        // DetourDetach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
+        // DetourDetach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
 
-        DetourDetach(&(PVOID &)Oldsocket, Newsocket);
-        DetourDetach(&(PVOID &)Oldbind, Newbind);
-        DetourDetach(&(PVOID &)Oldlisten, Newlisten);
-        DetourDetach(&(PVOID &)Oldaccept, Newaccept);
-        DetourDetach(&(PVOID &)Oldconnect, Newconnect);
-        DetourDetach(&(PVOID &)Oldsend, Newsend);
-        DetourDetach(&(PVOID &)Oldrecv, Newrecv);
+        // DetourDetach(&(PVOID &)Oldsocket, Newsocket);
+        // DetourDetach(&(PVOID &)Oldbind, Newbind);
+        // DetourDetach(&(PVOID &)Oldlisten, Newlisten);
+        // DetourDetach(&(PVOID &)Oldaccept, Newaccept);
+        // DetourDetach(&(PVOID &)Oldconnect, Newconnect);
+        // DetourDetach(&(PVOID &)Oldsend, Newsend);
+        // DetourDetach(&(PVOID &)Oldrecv, Newrecv);
         // DetourDetach(&(PVOID&)Oldsendto, Newsendto);
         // DetourDetach(&(PVOID&)Oldrecvfrom, Newrecvfrom);
         // DetourDetach(&(PVOID&)Oldmemcpy, Newmemcpy);
