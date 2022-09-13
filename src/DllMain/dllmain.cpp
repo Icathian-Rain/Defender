@@ -318,7 +318,9 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCreateKeyEx(
 {
     Msg msg("RegCreateKeyEx");
     std::string lpSubKey_tmp = std::string(CW2A(lpSubKey, CP_UTF8));
-    std::string lpClass_tmp = std::string(CW2A(lpClass, CP_UTF8));
+    std::string lpClass_tmp = "";
+    if (lpClass != NULL)
+        lpClass_tmp = std::string(CW2A(lpClass, CP_UTF8));
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpSubKey", lpSubKey_tmp);
     msg.setItem("Reserved", std::to_string(Reserved));
