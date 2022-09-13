@@ -254,7 +254,6 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapDestory(
     return OldHeapDestory(hHeap);
 }
 
-bool isAlloc = false;
 // HeapAlloc
 static LPVOID(WINAPI *OldHeapAlloc)(
     HANDLE hHeap,
@@ -266,21 +265,14 @@ extern "C" __declspec(dllexport) LPVOID WINAPI NewHeapAlloc(
     SIZE_T dwBytes //	分配大小
 )
 {
-    if (isAlloc == false)
-    {
-        isAlloc = true;
-        Msg msg("HeapAlloc");
-        msg.setItem("hHeap", std::to_string((int)hHeap));
-        msg.setItem("dwFlags", std::to_string(dwFlags));
-        msg.setItem("dwBytes", std::to_string(dwBytes));
-        client.send(msg.getMsg().c_str());
-    }
-    else
-        isAlloc = false;
+    // Msg msg("HeapAlloc");
+    // msg.setItem("hHeap", std::to_string((int)hHeap));
+    // msg.setItem("dwFlags", std::to_string(dwFlags));
+    // msg.setItem("dwBytes", std::to_string(dwBytes));
+    // client.send(msg.getMsg().c_str());
     return OldHeapAlloc(hHeap, dwFlags, dwBytes);
 }
 
-bool isFree = false;
 // HeapFree
 static BOOL(WINAPI *OldHeapFree)(
     HANDLE hHeap,
@@ -292,17 +284,11 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapFree(
     _Frees_ptr_opt_ LPVOID lpMem // 指向要释放的内存块的指针
 )
 {
-    if (isFree == false)
-    {
-        isFree = true;
-        Msg msg("HeapFree");
-        msg.setItem("hHeap", std::to_string((int)hHeap));
-        msg.setItem("dwFlags", std::to_string(dwFlags));
-        msg.setItem("lpMem", std::to_string((int)lpMem));
-        client.send(msg.getMsg().c_str());
-    }
-    else
-        isFree = false;
+    Msg msg("HeapFree");
+    msg.setItem("hHeap", std::to_string((int)hHeap));
+    msg.setItem("dwFlags", std::to_string(dwFlags));
+    msg.setItem("lpMem", std::to_string((int)lpMem));
+    client.send(msg.getMsg().c_str());
     return OldHeapFree(hHeap, dwFlags, lpMem);
 }
 
@@ -655,15 +641,15 @@ BOOL WINAPI DllMain(HMODULE hModule,
 
         DetourAttach(&(PVOID &)OldHeapCreate, NewHeapCreate);
         DetourAttach(&(PVOID &)OldHeapDestory, NewHeapDestory);
-        // DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
+        DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
         // DetourAttach(&(PVOID&)OldHeapFree, NewHeapFree);
 
-        // DetourAttach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
-        // DetourAttach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
-        // DetourAttach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
-        // DetourAttach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
-        // DetourAttach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
-        // DetourAttach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
+        DetourAttach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
+        DetourAttach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
+        DetourAttach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
+        DetourAttach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
+        DetourAttach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
+        DetourAttach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
 
         DetourAttach(&(PVOID &)Oldsocket, Newsocket);
         DetourAttach(&(PVOID &)Oldbind, Newbind);
@@ -685,34 +671,34 @@ BOOL WINAPI DllMain(HMODULE hModule,
     {
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
-        DetourAttach(&(PVOID &)OldMessageBoxA, NewMessageBoxA);
-        DetourAttach(&(PVOID &)OldMessageBoxW, NewMessageBoxW);
+        DetourDetach(&(PVOID &)OldMessageBoxA, NewMessageBoxA);
+        DetourDetach(&(PVOID &)OldMessageBoxW, NewMessageBoxW);
 
-        DetourAttach(&(PVOID &)OldCreateFile, NewCreateFile);
-        DetourAttach(&(PVOID &)OldWriteFile, NewWriteFile);
-        DetourAttach(&(PVOID &)OldReadFile, NewReadFile);
+        DetourDetach(&(PVOID &)OldCreateFile, NewCreateFile);
+        DetourDetach(&(PVOID &)OldWriteFile, NewWriteFile);
+        DetourDetach(&(PVOID &)OldReadFile, NewReadFile);
 
-        DetourAttach(&(PVOID &)OldHeapCreate, NewHeapCreate);
-        DetourAttach(&(PVOID &)OldHeapDestory, NewHeapDestory);
-        // DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
-        // DetourAttach(&(PVOID&)OldHeapFree, NewHeapFree);
+        DetourDetach(&(PVOID &)OldHeapCreate, NewHeapCreate);
+        DetourDetach(&(PVOID &)OldHeapDestory, NewHeapDestory);
+        DetourDetach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
+        // DetourDetach(&(PVOID&)OldHeapFree, NewHeapFree);
 
-        // DetourAttach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
-        // DetourAttach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
-        // DetourAttach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
-        // DetourAttach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
-        // DetourAttach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
-        // DetourAttach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
+        DetourDetach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
+        DetourDetach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
+        DetourDetach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
+        DetourDetach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
+        DetourDetach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
+        DetourDetach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);
 
-        DetourAttach(&(PVOID &)Oldsocket, Newsocket);
-        DetourAttach(&(PVOID &)Oldbind, Newbind);
-        DetourAttach(&(PVOID &)Oldlisten, Newlisten);
-        DetourAttach(&(PVOID &)Oldaccept, Newaccept);
-        DetourAttach(&(PVOID &)Oldconnect, Newconnect);
-        DetourAttach(&(PVOID &)Oldsend, Newsend);
-        DetourAttach(&(PVOID &)Oldrecv, Newrecv);
-        // DetourAttach(&(PVOID&)Oldsendto, Newsendto);
-        // DetourAttach(&(PVOID&)Oldrecvfrom, Newrecvfrom);
+        DetourDetach(&(PVOID &)Oldsocket, Newsocket);
+        DetourDetach(&(PVOID &)Oldbind, Newbind);
+        DetourDetach(&(PVOID &)Oldlisten, Newlisten);
+        DetourDetach(&(PVOID &)Oldaccept, Newaccept);
+        DetourDetach(&(PVOID &)Oldconnect, Newconnect);
+        DetourDetach(&(PVOID &)Oldsend, Newsend);
+        DetourDetach(&(PVOID &)Oldrecv, Newrecv);
+        // DetourDetach(&(PVOID&)Oldsendto, Newsendto);
+        // DetourDetach(&(PVOID&)Oldrecvfrom, Newrecvfrom);
         // DetourDetach(&(PVOID&)Oldmemcpy, Newmemcpy);
         DetourTransactionCommit();
         break;
