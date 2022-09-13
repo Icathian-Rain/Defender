@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"defender/processInfo"
 	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"strings"
-
-	"defender/processInfo"
+	"syscall"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -122,6 +122,7 @@ func (a *App) RunTest() bool {
 			os.Stdout,
 			os.Stderr,
 		},
+		Sys: &syscall.SysProcAttr{HideWindow: true},
 	}
 	pid, err := os.StartProcess("C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\syringe\\Debug\\syringe.exe", []string{a.testInstance.filePath}, procAttr)
 	if err != nil {
