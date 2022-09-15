@@ -36,6 +36,7 @@ const msgTypes = [
     "RegCreateKeyEx",
     "RegSetValueEx",
     "RegOpenKeyEx",
+    "RegQueryValueEx",
     "RegCloseKey",
     "RegDeleteKey",
     "RegDeleteValue",

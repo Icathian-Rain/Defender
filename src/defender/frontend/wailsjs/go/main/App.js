@@ -34,8 +34,8 @@ export function OpenEXEDialog() {
   return window['go']['main']['App']['OpenEXEDialog']();
 }
 
-export function RunTest() {
-  return window['go']['main']['App']['RunTest']();
+export function RunTest(arg1) {
+  return window['go']['main']['App']['RunTest'](arg1);
 }
 
 export function StartUDP() {

@@ -33,6 +33,7 @@ udp::UdpClient client("127.0.0.1", 4000);
 // #define RegCreateKeyEx 10
 // #define RegSetValueEx 11
 // #define RegOpenKeyEx  12
+// #define RegQueryValueEx 13
 // #define RegCloseKey 13
 // #define RegDeleteKey 14
 // #define RegDeleteValue 15
@@ -151,6 +152,7 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
 {
     Msg msg("WriteFile");
     std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
+    lpBuffer_tmp = GbkToUtf8(lpBuffer_tmp.c_str());
     msg.setItem("hFile", std::to_string((int)hFile));
     msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToWrite", std::to_string(nNumberOfBytesToWrite));
@@ -354,6 +356,36 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegOpenKeyEx(
     client.send(msg.getMsg().c_str());
     return OldRegOpenKeyEx(hKey, lpSubKey, ulOptions, samDesired, phkResult);
 }
+// RegQueryValueEx
+static LSTATUS(WINAPI *OldRegQueryValueEx)(
+    HKEY hKey,         // 已经打开的项的句柄
+    LPCWSTR lpValueName, // 要查询的值的名称
+    LPDWORD lpReserved,  // 保留， 0
+    LPDWORD lpType,      // 指向一个变量，用于接收值的类型
+    LPBYTE lpData,       // 指向一个缓冲区，用于接收值的数据
+    LPDWORD lpcbData     // 指向一个变量，用于接收数据的大小
+    ) = RegQueryValueEx;
+extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegQueryValueEx(
+    HKEY hKey,
+    LPCWSTR lpValueName,
+    LPDWORD lpReserved,
+    LPDWORD lpType,
+    LPBYTE lpData,
+    LPDWORD lpcbData)
+{
+    Msg msg("RegQueryValueEx");
+    std::string lpValueName_tmp = wchar2string(lpValueName);
+    std::string lpData_tmp = std::to_string((int) lpData);
+    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("lpValueName", lpValueName_tmp);
+    msg.setItem("lpReserved", std::to_string((int)lpReserved));
+    msg.setItem("lpType", std::to_string((int)lpType));
+    msg.setItem("lpData", lpData_tmp);
+    msg.setItem("lpcbData", std::to_string((int)lpcbData));
+    client.send(msg.getMsg().c_str());
+    return OldRegQueryValueEx(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+}
+
 
 // RegCloseKey
 static LSTATUS(WINAPI *OldRegCloseKey)(
@@ -642,6 +674,7 @@ BOOL WINAPI DllMain(HMODULE hModule,
         DetourAttach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
         DetourAttach(&(PVOID&)OldRegSetValueEx, NewRegSetValueEx);
         DetourAttach(&(PVOID&)OldRegOpenKeyEx, NewRegOpenKeyEx);
+        DetourAttach(&(PVOID&)OldRegQueryValueEx, NewRegQueryValueEx);
         DetourAttach(&(PVOID&)OldRegCloseKey, NewRegCloseKey);
         DetourAttach(&(PVOID&)OldRegDeleteKey, NewRegDeleteKey);
         DetourAttach(&(PVOID&)OldRegDeleteValue, NewRegDeleteValue);

@@ -146,7 +146,7 @@ let openFile = () => {
 // 启动测试
 let test = () => {
     percentage.value = 50;
-    RunTest()
+    RunTest(testInstance.value.filePath)
         .then((flag) => {
             setTimeout(function () {
                 refresh();

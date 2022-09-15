@@ -18,6 +18,6 @@ export function KillTest():Promise<boolean>;
 
 export function OpenEXEDialog():Promise<boolean>;
 
-export function RunTest():Promise<boolean>;
+export function RunTest(arg1:string):Promise<boolean>;
 
 export function StartUDP():void;
