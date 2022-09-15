@@ -108,8 +108,10 @@ func (a *App) OpenEXEDialog() bool {
 }
 
 // RunTest
-func (a *App) RunTest() bool {
-	if a.testInstance.filePath == "" {
+func (a *App) RunTest(filePath string) bool {
+	a.testInstance.filePath = filePath
+	var length = len(filePath)
+	if length < 5 || filePath[length-4:] != ".exe" {
 		a.testInstance.isRunning = false
 		a.testInstance.syringe_pid = nil
 		return false
