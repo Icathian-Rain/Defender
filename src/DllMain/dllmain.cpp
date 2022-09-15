@@ -49,38 +49,6 @@ udp::UdpClient client("127.0.0.1", 4000);
 // // udp
 // #define sendto 23
 // #define recvfrom 24
-std::string GbkToUtf8(const char *src_str)
-{
-	int len = MultiByteToWideChar(CP_ACP, 0, src_str, -1, NULL, 0);
-	wchar_t* wstr = new wchar_t[len + 1];
-	memset(wstr, 0, len + 1);
-	MultiByteToWideChar(CP_ACP, 0, src_str, -1, wstr, len);
-	len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-	char* str = new char[len + 1];
-	memset(str, 0, len + 1);
-	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, NULL, NULL);
-	std::string strTemp = str;
-	if (wstr) delete[] wstr;
-	if (str) delete[] str;
-	return strTemp;
-}
-
-std::string Utf8ToGbk(const char *src_str)
-{
-	int len = MultiByteToWideChar(CP_UTF8, 0, src_str, -1, NULL, 0);
-	wchar_t* wszGBK = new wchar_t[len + 1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, src_str, -1, wszGBK, len);
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char* szGBK = new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
-	std::string strTemp(szGBK);
-	if (wszGBK) delete[] wszGBK;
-	if (szGBK) delete[] szGBK;
-	return strTemp;
-}
-
 
 
 // MessageBox
@@ -100,8 +68,8 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxA(
     _In_ UINT uType            // button
 )
 {
-    std::string lpText_tmp = GbkToUtf8(lpText);
-    std::string lpCaption_tmp = GbkToUtf8(lpCaption);
+    std::string lpText_tmp = std::string(lpText);
+    std::string lpCaption_tmp = std::string(lpCaption);
     Msg msg("MessageBoxA");
     msg.setItem("hWnd", std::to_string((int)hWnd));
     msg.setItem("lpText", lpText_tmp);
@@ -109,7 +77,6 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxA(
     msg.setItem("uType", std::to_string(uType));
     client.send(msg.getMsg().c_str());
     return OldMessageBoxA(hWnd, lpText, lpCaption, uType);
-    // return OldMessageBoxA(hWnd, "1234", "hook", uType);
 }
 
 
@@ -122,14 +89,13 @@ extern "C" __declspec(dllexport) int WINAPI NewMessageBoxW(
     _In_ UINT uType             // 类型
 )
 {
-    
-    std::string lpText_tmp = std::string(CW2A(lpText, CP_UTF8));
-    std::string lpCaption_tmp = std::string(CW2A(lpCaption, CP_UTF8));
+    std::string lpText_tmp = wchar2string(lpText);
+    std::string lpCaption_tmp = wchar2string(lpCaption);
     Msg msg("MessageBoxW");
-    msg.setItem("hWnd 窗口句柄", std::to_string((int)hWnd));
-    msg.setItem("lpText 字符串", lpText_tmp);
-    msg.setItem("lpCaption 标题", lpCaption_tmp);
-    msg.setItem("uType 类型", std::to_string(uType));
+    msg.setItem("hWnd", std::to_string((int)hWnd));
+    msg.setItem("lpText", lpText_tmp);
+    msg.setItem("lpCaption", lpCaption_tmp);
+    msg.setItem("uType", std::to_string(uType));
     client.send(msg.getMsg().c_str());
     return OldMessageBoxW(hWnd, lpText, lpCaption, uType);
 }
@@ -154,10 +120,10 @@ extern "C" __declspec(dllexport) HANDLE WINAPI NewCreateFile(
     HANDLE hTemplateFile                        // 如果不为0则指定一个文件句柄，复制扩展属性
 )
 {
-    std::string lpFileName_tmp = std::string(CW2A(lpFileName, CP_UTF8));
+    std::string lpFileName_tmp = wchar2string(lpFileName);
     Msg msg("CreateFile");
-    msg.setItem("lpFileName 文件名", lpFileName_tmp);
-    msg.setItem("dwDesiredAccess 权限管理", std::to_string(dwDesiredAccess));
+    msg.setItem("lpFileName", lpFileName_tmp);
+    msg.setItem("dwDesiredAccess", std::to_string(dwDesiredAccess));
     msg.setItem("dwShareMode", std::to_string(dwShareMode));
     msg.setItem("lpSecurityAttributes", std::to_string((int)lpSecurityAttributes));
     msg.setItem("dwCreationDisposition", std::to_string(dwCreationDisposition));
@@ -184,9 +150,9 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
 )
 {
     Msg msg("WriteFile");
-    // std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
+    std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
     msg.setItem("hFile", std::to_string((int)hFile));
-    msg.setItem("lpBuffer", std::to_string((int)lpBuffer));
+    msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToWrite", std::to_string(nNumberOfBytesToWrite));
     msg.setItem("lpNumberOfBytesWritten", std::to_string((int)lpNumberOfBytesWritten));
     msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
@@ -194,7 +160,6 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
 
     return OldWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 }
-
 // ReadFile
 static BOOL(WINAPI *OldReadFile)(
     HANDLE hFile,
@@ -204,19 +169,18 @@ static BOOL(WINAPI *OldReadFile)(
     LPOVERLAPPED lpOverlapped) = ReadFile;
 extern "C" __declspec(dllexport) BOOL WINAPI NewReadFile(
     HANDLE hFile,                // 处理要读取的文件
-    LPVOID lpBuffer,             // 指向要读处的数据的指针
+    LPVOID lpBuffer,             // 保存数据的指针
     DWORD nNumberOfBytesToRead,  // 要读取的字节数
     LPDWORD lpNumberOfBytesRead, // 读取的字节数
     LPOVERLAPPED lpOverlapped    // 指向重叠I/O结构的指针
 )
 {
     Msg msg("ReadFile");
-    // std::string lpBuffer_tmp((char *)lpBuffer);
     msg.setItem("hFile", std::to_string((int)hFile));
     msg.setItem("lpBuffer", std::to_string((int)lpBuffer));
     msg.setItem("nNumberOfBytesToRead", std::to_string(nNumberOfBytesToRead));
     msg.setItem("lpNumberOfBytesRead", std::to_string((int)lpNumberOfBytesRead));
-    msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
+    msg.setItem("lpOverlapped/O结构的指针", std::to_string((int)lpOverlapped));
     client.send(msg.getMsg().c_str());
     return OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 }
@@ -248,7 +212,7 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapDestory(
     HANDLE hHeap // 要销毁堆的句柄
 )
 {
-    Msg msg("HeapDestory");
+    Msg msg("HeapDestroy");
     msg.setItem("hHeap", std::to_string((int)hHeap));
     client.send(msg.getMsg().c_str());
     return OldHeapDestory(hHeap);
@@ -284,11 +248,11 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapFree(
     _Frees_ptr_opt_ LPVOID lpMem // 指向要释放的内存块的指针
 )
 {
-    Msg msg("HeapFree");
-    msg.setItem("hHeap", std::to_string((int)hHeap));
-    msg.setItem("dwFlags", std::to_string(dwFlags));
-    msg.setItem("lpMem", std::to_string((int)lpMem));
-    client.send(msg.getMsg().c_str());
+    // Msg msg("HeapFree");
+    // msg.setItem("hHeap", std::to_string((int)hHeap));
+    // msg.setItem("dwFlags", std::to_string(dwFlags));
+    // msg.setItem("lpMem", std::to_string((int)lpMem));
+    // client.send(msg.getMsg().c_str());
     return OldHeapFree(hHeap, dwFlags, lpMem);
 }
 
@@ -317,10 +281,10 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCreateKeyEx(
     LPDWORD lpdwDisposition)
 {
     Msg msg("RegCreateKeyEx");
-    std::string lpSubKey_tmp = std::string(CW2A(lpSubKey, CP_UTF8));
+    std::string lpSubKey_tmp = wchar2string(lpSubKey);
     std::string lpClass_tmp = "";
     if (lpClass != NULL)
-        lpClass_tmp = std::string(CW2A(lpClass, CP_UTF8));
+        lpClass_tmp = wchar2string(lpClass);
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpSubKey", lpSubKey_tmp);
     msg.setItem("Reserved", std::to_string(Reserved));
@@ -352,12 +316,14 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegSetValueEx(
     DWORD cbData)
 {
     Msg msg("RegSetValueEx");
-    std::string lpValueName_tmp = std::string(CW2A(lpValueName, CP_UTF8));
+    std::string lpValueName_tmp = wchar2string(lpValueName);
+    std::string lpData_tmp = std::string((char *)lpData, cbData);
+    lpData_tmp = GbkToUtf8(lpData_tmp.c_str());
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpValueName", lpValueName_tmp);
-    msg.setItem("Reserved", std::to_string(Reserved));
+    msg.setItem("Reserved 0", std::to_string(Reserved));
     msg.setItem("dwType", std::to_string(dwType));
-    msg.setItem("lpData", std::to_string((int)lpData));
+    msg.setItem("lpData", lpData_tmp);
     msg.setItem("cbData", std::to_string(cbData));
     client.send(msg.getMsg().c_str());
     return OldRegSetValueEx(hKey, lpValueName, Reserved, dwType, lpData, cbData);
@@ -365,7 +331,7 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegSetValueEx(
 
 // RegOpenKeyEx
 static LSTATUS(WINAPI *OldRegOpenKeyEx)(
-    HKEY hKey,         // 需要打开的主键的名称
+    HKEY hKey,         // 需要打开的主键
     LPCWSTR lpSubKey,  // 需要打开的子键的名称
     DWORD ulOptions,   // 保留， 0
     REGSAM samDesired, // 安全访问标记，权限
@@ -379,8 +345,9 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegOpenKeyEx(
     PHKEY phkResult)
 {
     Msg msg("RegOpenKeyEx");
+    std::string lpSubKey_tmp = wchar2string(lpSubKey);
     msg.setItem("hKey", std::to_string((int)hKey));
-    msg.setItem("lpSubKey", std::to_string((int)lpSubKey));
+    msg.setItem("lpSubKey", lpSubKey_tmp);
     msg.setItem("ulOptions", std::to_string(ulOptions));
     msg.setItem("samDesired", std::to_string(samDesired));
     msg.setItem("phkResult", std::to_string((int)phkResult));
@@ -411,8 +378,9 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegDeleteKey(
     LPCWSTR lpSubKey)
 {
     Msg msg("RegDeleteKey");
+    std::string lpSubKey_tmp = wchar2string(lpSubKey);
     msg.setItem("hKey", std::to_string((int)hKey));
-    msg.setItem("lpSubKey", std::to_string((int)lpSubKey));
+    msg.setItem("lpSubKey", lpSubKey_tmp);
     client.send(msg.getMsg().c_str());
     return OldRegDeleteKey(hKey, lpSubKey);
 }
@@ -427,8 +395,9 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegDeleteValue(
     LPCWSTR lpValueName)
 {
     Msg msg("RegDeleteValue");
+    std::string lpValueName_tmp = wchar2string(lpValueName);
     msg.setItem("hKey", std::to_string((int)hKey));
-    msg.setItem("lpValueName", std::to_string((int)lpValueName));
+    msg.setItem("lpValueName", lpValueName_tmp);
     client.send(msg.getMsg().c_str());
     return OldRegDeleteValue(hKey, lpValueName);
 }
@@ -459,7 +428,17 @@ extern "C" __declspec(dllexport) int WINAPI Newbind(SOCKET s, const sockaddr *na
 {
     Msg msg("bind");
     msg.setItem("s", std::to_string(s));
-    msg.setItem("name", std::to_string((int)name));
+    // msg.setItem("name", std::to_string((int)name));
+    sockaddr_in *addr_in = (sockaddr_in *)name;
+    std::string sin_family = std::to_string(addr_in->sin_family);
+    // std::string ip = inet_ntoa(addr->sin_addr);
+    char ip[20];
+    inet_ntop(AF_INET, &addr_in->sin_addr, ip, 20);
+    
+    std::string port = std::to_string(ntohs(addr_in->sin_port));
+    msg.setItem("sin_family", sin_family);
+    msg.setItem("ip", ip);
+    msg.setItem("port", port);
     msg.setItem("namelen", std::to_string(namelen));
     client.send(msg.getMsg().c_str());
     return Oldbind(s, name, namelen);
@@ -489,7 +468,19 @@ extern "C" __declspec(dllexport) SOCKET WINAPI Newaccept(SOCKET s, sockaddr *add
 {
     Msg msg("accept");
     msg.setItem("s", std::to_string(s));
-    msg.setItem("addr", std::to_string((int)addr));
+    // msg.setItem("addr", std::to_string((int)addr));
+    sockaddr_in *addr_in = (sockaddr_in *)addr;
+    std::string sin_family = std::to_string(addr_in->sin_family);
+
+    // std::string ip = inet_ntoa(addr_in->sin_addr);
+    char ip[20];
+    inet_ntop(AF_INET, &addr_in->sin_addr, ip, 20);
+
+    std::string port = std::to_string(ntohs(addr_in->sin_port));
+
+    msg.setItem("sin_family", sin_family);
+    msg.setItem("ip", ip);
+    msg.setItem("port", port);
     msg.setItem("addrlen", std::to_string((int)addrlen));
     client.send(msg.getMsg().c_str());
     return Oldaccept(s, addr, addrlen);
@@ -505,7 +496,16 @@ extern "C" __declspec(dllexport) int WINAPI Newconnect(SOCKET s, const sockaddr 
 {
     Msg msg("connect");
     msg.setItem("s", std::to_string(s));
-    msg.setItem("name", std::to_string((int)name));
+    // msg.setItem("name", std::to_string((int)name));
+    sockaddr_in *addr_in = (sockaddr_in *)name;
+    std::string sin_family = std::to_string(addr_in->sin_family);
+    // std::string ip = inet_ntoa(addr->sin_addr);
+    char ip[20];
+    inet_ntop(AF_INET, &addr_in->sin_addr, ip, 20);
+    std::string port = std::to_string(ntohs(addr_in->sin_port));
+    msg.setItem("sin_family", sin_family);
+    msg.setItem("ip", ip);
+    msg.setItem("port", port);
     msg.setItem("namelen", std::to_string(namelen));
     client.send(msg.getMsg().c_str());
     return Oldconnect(s, name, namelen);
@@ -540,7 +540,7 @@ static int(WINAPI *Oldrecv)(
 extern "C" __declspec(dllexport) int WINAPI Newrecv(SOCKET s, char *buf, int len, int flags)
 {
     Msg msg("recv");
-    std::string buf_tmp(buf);
+    std::string buf_tmp(buf, len);
     msg.setItem("s", std::to_string(s));
     msg.setItem("buf", buf_tmp);
     msg.setItem("len", std::to_string(len));
@@ -616,13 +616,6 @@ BOOL WINAPI DllMain(HMODULE hModule,
                     DWORD ul_reason_for_call,
                     LPVOID lpReserved)
 {
-    // wchar_t FileName[256];
-    // GetModuleFileName(0, (LPWSTR)FileName, 256);
-    // printf("文件名：%c%c%c%c：文件名", FileName[0], FileName[1], FileName[2], FileName[3]);
-    // if (wcsstr(FileName, L"syringe.exe")) {
-    //	return true;
-    // }
-    // wprintf(L"%ls\n", FileName);
 
     switch (ul_reason_for_call)
     {
@@ -643,7 +636,7 @@ BOOL WINAPI DllMain(HMODULE hModule,
 
         DetourAttach(&(PVOID &)OldHeapCreate, NewHeapCreate);
         DetourAttach(&(PVOID &)OldHeapDestory, NewHeapDestory);
-        DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
+        // DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
         // DetourAttach(&(PVOID&)OldHeapFree, NewHeapFree);
 
         DetourAttach(&(PVOID&)OldRegCreateKeyEx, NewRegCreateKeyEx);
