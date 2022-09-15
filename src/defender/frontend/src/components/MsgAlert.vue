@@ -9,7 +9,7 @@
         class="mb-5 cursor-pointer"
     />
     <el-dialog v-model="dialogVisible" title="操作详细信息" width="70%">
-        <el-descriptions :title="msg['funcName']" :column="3" border>
+        <el-descriptions :title="msg['funcName']" :column="3" border direction="vertical">
             <template #extra>
                 <el-alert
                     :closable="false"
@@ -21,7 +21,7 @@
                 <template #label>
                     {{ getDecode(key) }}
                 </template>
-                <el-scrollbar height="60px">
+                <el-scrollbar max-height="100px">
                         {{ getDecode(val) }}
                 </el-scrollbar>
             </el-descriptions-item>
