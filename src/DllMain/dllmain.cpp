@@ -150,17 +150,18 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
     LPOVERLAPPED lpOverlapped       // 指向重叠I/O结构的指针
 )
 {
+    BOOL ret = OldWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
     Msg msg("WriteFile");
     std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
     lpBuffer_tmp = GbkToUtf8(lpBuffer_tmp.c_str());
     msg.setItem("hFile", std::to_string((int)hFile));
     msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToWrite", std::to_string(nNumberOfBytesToWrite));
-    msg.setItem("lpNumberOfBytesWritten", std::to_string((int)lpNumberOfBytesWritten));
+    msg.setItem("lpNumberOfBytesWritten", std::to_string(*lpNumberOfBytesWritten));
     msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
     client.send(msg.getMsg().c_str());
 
-    return OldWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+    return ret;
 }
 // ReadFile
 static BOOL(WINAPI *OldReadFile)(
@@ -177,14 +178,16 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewReadFile(
     LPOVERLAPPED lpOverlapped    // 指向重叠I/O结构的指针
 )
 {
+    BOOL ret = OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
     Msg msg("ReadFile");
+    std::string lpBuffer_tmp((char *)lpBuffer, *lpNumberOfBytesRead);
     msg.setItem("hFile", std::to_string((int)hFile));
-    msg.setItem("lpBuffer", std::to_string((int)lpBuffer));
+    msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToRead", std::to_string(nNumberOfBytesToRead));
-    msg.setItem("lpNumberOfBytesRead", std::to_string((int)lpNumberOfBytesRead));
+    msg.setItem("lpNumberOfBytesRead", std::to_string(*lpNumberOfBytesRead));
     msg.setItem("lpOverlapped/O结构的指针", std::to_string((int)lpOverlapped));
     client.send(msg.getMsg().c_str());
-    return OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+    return ret;
 }
 
 // HeapCreate
@@ -282,6 +285,12 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCreateKeyEx(
     PHKEY phkResult,
     LPDWORD lpdwDisposition)
 {
+    DWORD res;
+    if (lpdwDisposition == NULL)
+    {
+        lpdwDisposition = &res;
+    }
+    LSTATUS ret = OldRegCreateKeyEx(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, &res);
     Msg msg("RegCreateKeyEx");
     std::string lpSubKey_tmp = wchar2string(lpSubKey);
     std::string lpClass_tmp = "";
@@ -295,9 +304,9 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegCreateKeyEx(
     msg.setItem("samDesired", std::to_string(samDesired));
     msg.setItem("lpSecurityAttributes", std::to_string((int)lpSecurityAttributes));
     msg.setItem("phkResult", std::to_string((int)phkResult));
-    msg.setItem("lpdwDisposition", std::to_string((int)lpdwDisposition));
+    msg.setItem("lpdwDisposition", std::to_string(*lpdwDisposition));
     client.send(msg.getMsg().c_str());
-    return OldRegCreateKeyEx(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
+    return ret;
 }
 
 // RegSetValueEx
@@ -346,15 +355,16 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegOpenKeyEx(
     REGSAM samDesired,
     PHKEY phkResult)
 {
+    LSTATUS ret = OldRegOpenKeyEx(hKey, lpSubKey, ulOptions, samDesired, phkResult);
     Msg msg("RegOpenKeyEx");
     std::string lpSubKey_tmp = wchar2string(lpSubKey);
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpSubKey", lpSubKey_tmp);
     msg.setItem("ulOptions", std::to_string(ulOptions));
     msg.setItem("samDesired", std::to_string(samDesired));
-    msg.setItem("phkResult", std::to_string((int)phkResult));
+    msg.setItem("phkResult", std::to_string((int)*phkResult));
     client.send(msg.getMsg().c_str());
-    return OldRegOpenKeyEx(hKey, lpSubKey, ulOptions, samDesired, phkResult);
+    return ret;
 }
 // RegQueryValueEx
 static LSTATUS(WINAPI *OldRegQueryValueEx)(
@@ -373,17 +383,19 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegQueryValueEx(
     LPBYTE lpData,
     LPDWORD lpcbData)
 {
+    LSTATUS ret = OldRegQueryValueEx(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+    // 信息构造
     Msg msg("RegQueryValueEx");
     std::string lpValueName_tmp = wchar2string(lpValueName);
-    std::string lpData_tmp = std::to_string((int) lpData);
+    std::string lpData_tmp = std::to_string(lpData, *lpcbData);
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpValueName", lpValueName_tmp);
     msg.setItem("lpReserved", std::to_string((int)lpReserved));
-    msg.setItem("lpType", std::to_string((int)lpType));
+    msg.setItem("lpType", std::to_string(*lpType));
     msg.setItem("lpData", lpData_tmp);
-    msg.setItem("lpcbData", std::to_string((int)lpcbData));
+    msg.setItem("lpcbData", std::to_string((*lpcbData));
     client.send(msg.getMsg().c_str());
-    return OldRegQueryValueEx(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+    return ret;
 }
 
 
