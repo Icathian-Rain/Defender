@@ -6,7 +6,9 @@
 #include "framework.h"
 #include "MFCtest.h"
 #include "MFCtestDlg.h"
+#include "windup.h"
 #include "afxdialogex.h"
+#include <string>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -311,62 +313,57 @@ void CMFCtestDlg::OnBnClickedButton12()
 void CMFCtestDlg::OnBnClickedButton1()
 {
     // 初始化
-    WORD winsock_version = MAKEWORD(2, 2);
+    WORD winsock_version = MAKEWORD(1, 1);
     WSADATA wsa_data;
     if (WSAStartup(winsock_version, &wsa_data) != 0)
     {
         return ;
     }
-    // TODO: 在此添加控件通知处理程序代码
+    char url[] = "cse.hust.edu.cn";
+    std::string http_msg = "";
+    struct addrinfo hints;
+    struct addrinfo* result;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    if (getaddrinfo(url, "80", &hints, &result) != 0)
+    {
+        return ;
+    }
+    // 创建套接字
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     // addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-    addr.sin_port = htons(5678);
-    if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
+    addr.sin_addr.s_addr = ((struct sockaddr_in*)(result->ai_addr))->sin_addr.s_addr;
+    addr.sin_port = htons(80);
+    if (connect(sock, (SOCKADDR *)&addr, sizeof(addr)) != 0)
     {
         return;
     }
-    if (listen(sock, 5) == SOCKET_ERROR)
+    char buffer[10000];
+    sprintf_s(buffer, "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", url);
+    send(sock, buffer, strlen(buffer), 0);
+    memset(buffer, 0, sizeof(buffer));
+    while (recv(sock, buffer, sizeof(buffer), 0) > 0)
     {
-        return;
-    }
-    while (1)
-    {
-        SOCKET client = accept(sock, NULL, NULL);
-        if (client == INVALID_SOCKET)
+        int i = 0;
+        while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r')
         {
-            return;
-        }
-        char buffer[1024];
-        int len = recv(client, buffer, sizeof(buffer), 0);
-        if (len == SOCKET_ERROR)
-        {
-            return;
+            http_msg += buffer[i];
+            i++;
         }
     }
+    freeaddrinfo(result);
     closesocket(sock);
+    WSACleanup();
+    
 }
 
 void CMFCtestDlg::OnBnClickedButton2()
 {
-    // TODO: 在此添加控件通知处理程序代码
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    // addr.sin_addr.s_addr = inet_addr("127.0.0.1")
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-    addr.sin_port = htons(5678);
-    if (connect(sock, (sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
-    {
-        return;
-    }
-    char buffer[] = "Hello World";
-    if (send(sock, buffer, strlen(buffer), 0) == SOCKET_ERROR)
-    {
-        return;
-    }
+    udp::UdpClient client("127.0.0.1", 7777);
+    client.send("Hello World!\n");
 }
