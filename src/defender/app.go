@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -116,6 +117,7 @@ func (a *App) RunTest(filePath string) bool {
 		a.testInstance.syringe_pid = nil
 		return false
 	}
+	syringe_path := "C:\\Users\\22057\\Desktop\\softwareSecurity\\test\\syringe.exe"
 	env := os.Environ()
 	procAttr := &os.ProcAttr{
 		Env: env,
@@ -125,8 +127,9 @@ func (a *App) RunTest(filePath string) bool {
 			os.Stderr,
 		},
 		Sys: &syscall.SysProcAttr{HideWindow: true},
+		Dir: filepath.Dir(filePath),
 	}
-	pid, err := os.StartProcess("C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\syringe\\Debug\\syringe.exe", []string{a.testInstance.filePath}, procAttr)
+	pid, err := os.StartProcess(syringe_path, []string{a.testInstance.filePath}, procAttr)
 	if err != nil {
 		a.testInstance.filePath = ""
 		a.testInstance.isRunning = false
@@ -166,7 +169,7 @@ func (a *App) StartUDP() {
 				a.testInstance.test_pid, _ = os.FindProcess(int(process.ProcessID))
 				a.testInstance.startTime = process.Time
 			} else {
-				// fmt.Println(msg)
+				fmt.Println(msg)
 				a.testInstance.msgs = append(a.testInstance.msgs, msg)
 				runtime.EventsEmit(a.ctx, "UDPMessage")
 			}

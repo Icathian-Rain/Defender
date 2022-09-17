@@ -19,15 +19,16 @@ int main(int argc, char* argv[]) {
 
 	// 路径配置
 	WCHAR DirPath[MAX_PATH + 1];
+	char DLLPath[MAX_PATH + 1];
 	/*
 	wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug");	// dll文件夹
 	char DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug\\DllMain.dll"; // dll的地址
 	*/
-	wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug");	// dll文件夹
-	char DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug\\DllMain.dll"; // dll的地址
-
-
-
+	//wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug");	// dll文件夹
+	//DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug\\DllMain.dll"; // dll的地址
+	GetCurrentDirectoryW(MAX_PATH, DirPath);
+    GetCurrentDirectoryA(MAX_PATH, DLLPath);
+    strcat_s(DLLPath, MAX_PATH, "\\DllMain.dll");
 	WCHAR EXE[MAX_PATH + 1] = { 0 };
 	swprintf_s(EXE, MAX_PATH, L"%hs", argv[0]);
 	// wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\testEXE\\X64\\Debug\\testEXE.exe");
