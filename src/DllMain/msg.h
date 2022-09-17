@@ -48,7 +48,7 @@ std::string wchar2string(const wchar_t* wchar)
 }
 
 
-std::string bytes2string(const unsigned char* bytes, int len)
+std::string bytes2string(const BYTE * bytes, int len)
 {
     std::string str = "";
     for (int i = 0; i < len; i++)
@@ -60,7 +60,7 @@ std::string bytes2string(const unsigned char* bytes, int len)
         }
         else if (byte >= 10 && byte <= 15)
         {
-            str += byte + 'A';
+            str += byte + 'A' - 10;
         }
         byte = bytes[i] & 0xf;
         if (byte >= 0 && byte <= 9)
@@ -69,7 +69,7 @@ std::string bytes2string(const unsigned char* bytes, int len)
         }
         else if (byte >= 10 && byte <= 15)
         {
-            str += byte + 'A';
+            str += byte + 'A' - 10;
         }
     }
     return str;
