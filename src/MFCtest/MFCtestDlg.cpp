@@ -37,13 +37,13 @@ protected:
     DECLARE_MESSAGE_MAP()
 };
 
-void wchar2char(const wchar_t* wchar, char *ch)
+void wchar2char(const wchar_t *wchar, char *ch)
 {
     int len = WideCharToMultiByte(CP_ACP, 0, wchar, -1, NULL, 0, NULL, NULL);
     WideCharToMultiByte(CP_ACP, 0, wchar, -1, ch, len, NULL, NULL);
 }
 
-void char2wchar(const char* ch, wchar_t* wchar)
+void char2wchar(const char *ch, wchar_t *wchar)
 {
     int len = MultiByteToWideChar(CP_ACP, 0, ch, -1, NULL, 0);
     MultiByteToWideChar(CP_ACP, 0, ch, -1, wchar, len);
@@ -57,7 +57,7 @@ void path2fileName(char *path, char *fileName)
     {
         str = str.substr(pos + 1);
     }
-    strcpy_s(fileName, str.length() + 1,str.c_str());
+    strcpy_s(fileName, str.length() + 1, str.c_str());
 }
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -234,13 +234,14 @@ void CMFCtestDlg::OnBnClickedButton6()
 void CMFCtestDlg::OnBnClickedButton7()
 {
     // TODO: 在此添加控件通知处理程序代码
-    char buffer[100];
     HANDLE hFile = (HANDLE)CreateFile(L"test.txt", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         return;
     }
-    if (!ReadFile(hFile, buffer, 100, NULL, NULL))
+    DWORD dwRead = GetFileSize(hFile, NULL);
+    char* buffer = new char[dwRead + 1];
+    if (!ReadFile(hFile, buffer, dwRead, NULL, NULL))
     {
         return;
     }
@@ -298,7 +299,7 @@ void CMFCtestDlg::OnBnClickedButton10()
     {
         return;
     }
-    if (RegSetValueEx(hKey, L"test", 0, REG_SZ, (BYTE *)L"hello world", wcslen(L"hello world")*2) != ERROR_SUCCESS)
+    if (RegSetValueEx(hKey, L"test", 0, REG_SZ, (BYTE *)L"hello world", wcslen(L"hello world") * 2) != ERROR_SUCCESS)
     {
         return;
     }
@@ -352,19 +353,19 @@ void CMFCtestDlg::OnBnClickedButton1()
     WSADATA wsa_data;
     if (WSAStartup(winsock_version, &wsa_data) != 0)
     {
-        return ;
+        return;
     }
     char url[] = "cse.hust.edu.cn";
     std::string http_msg = "";
     struct addrinfo hints;
-    struct addrinfo* result;
+    struct addrinfo *result;
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     if (getaddrinfo(url, "80", &hints, &result) != 0)
     {
-        return ;
+        return;
     }
     // 创建套接字
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -372,7 +373,7 @@ void CMFCtestDlg::OnBnClickedButton1()
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     // addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    addr.sin_addr.s_addr = ((struct sockaddr_in*)(result->ai_addr))->sin_addr.s_addr;
+    addr.sin_addr.s_addr = ((struct sockaddr_in *)(result->ai_addr))->sin_addr.s_addr;
     addr.sin_port = htons(80);
     if (connect(sock, (SOCKADDR *)&addr, sizeof(addr)) != 0)
     {
@@ -394,7 +395,6 @@ void CMFCtestDlg::OnBnClickedButton1()
     freeaddrinfo(result);
     closesocket(sock);
     WSACleanup();
-    
 }
 
 void CMFCtestDlg::OnBnClickedButton2()
@@ -407,29 +407,32 @@ void CMFCtestDlg::OnBnClickedButton2()
 void CMFCtestDlg::OnBnClickedButton3()
 {
 
-    char folderPath[] = "test1"; 
+    char folderPath[] = "test1";
     wchar_t wFolderPath[100];
     char2wchar(folderPath, wFolderPath);
-    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY)) {
+    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY))
+    {
         CreateDirectory(wFolderPath, NULL);
     }
     folderPath[4] = '2';
     char2wchar(folderPath, wFolderPath);
-    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY)) {
+    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY))
+    {
         CreateDirectory(wFolderPath, NULL);
     }
     folderPath[4] = '3';
     char2wchar(folderPath, wFolderPath);
-    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY)) {
+    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY))
+    {
         CreateDirectory(wFolderPath, NULL);
     }
     char buffer[] = "hello world";
-    HANDLE hfile =  CreateFile(L"test1\\test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hfile = CreateFile(L"test1\\test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hfile == INVALID_HANDLE_VALUE)
     {
         return;
     }
-    if(WriteFile(hfile, buffer, strlen(buffer), NULL, NULL) == FALSE)
+    if (WriteFile(hfile, buffer, strlen(buffer), NULL, NULL) == FALSE)
     {
         return;
     }
@@ -456,64 +459,54 @@ void CMFCtestDlg::OnBnClickedButton3()
     CloseHandle(hfile);
 }
 
-
 /// @brief 自我复制
 void CMFCtestDlg::OnBnClickedButton13()
 {
     // TODO: 在此添加控件通知处理程序代码
     char name[1000];
-    wchar_t wname[1000];
+
     // 获取当前程序路径
     GetModuleFileNameA(NULL, name, sizeof(name));
     path2fileName(name, name);
-    char2wchar(name, wname);
-    // 创建文件夹
-    char folderPath[] = "test"; 
-    wchar_t wFolderPath[100];
-    char2wchar(folderPath, wFolderPath);
-    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY)) {
-        CreateDirectory(wFolderPath, NULL);
-    }
     // 复制文件
-    char new_name[1000];
-    wchar_t new_wname[1000];
-    sprintf_s(new_name, "test\\%s", name);
-    char2wchar(new_name, new_wname);
-    CopyFile(wname, new_wname, FALSE);
-    // char buffer[10000];
-    // HANDLE hfile = CreateFile(wname, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    // if (hfile == INVALID_HANDLE_VALUE)
-    // {
-    //     return;
-    // }
-    // DWORD dwSize = GetFileSize(hfile, NULL);
-    // if (ReadFile(hfile, buffer, dwSize, NULL, NULL) == FALSE)
-    // {
-    //     return;
-    // }
-    // CloseHandle(hfile);
-    // char folderPath[] = "test"; 
-    // wchar_t wFolderPath[100];
-    // char2wchar(folderPath, wFolderPath);
-    // if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY)) {
-    //     CreateDirectory(wFolderPath, NULL);
-    // }
-    // char new_name[1000];
-    // wchar_t new_wname[1000];
-    // sprintf_s(new_name, "test\\%s", name);
-    // char2wchar(new_name, wname);
-    // hfile = CreateFile(new_wname, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    // if (hfile == INVALID_HANDLE_VALUE)
-    // {
-    //     return;
-    // }
-    // if (WriteFile(hfile, buffer, dwSize, NULL, NULL) == FALSE)
-    // {
-    //     return;
-    // }
-    // CloseHandle(hfile);
-}
+    HANDLE hfile = CreateFileA(name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hfile == INVALID_HANDLE_VALUE)
+    {
+        
+        MessageBoxA(NULL, "ReadFile Error", "Error", MB_OK);
+        return;
+    }
+    DWORD dwSize = GetFileSize(hfile, NULL);
+    char *buffer = new char[dwSize];
+    if (ReadFile(hfile, buffer, dwSize, NULL, NULL) == FALSE)
+    {
+        return;
+    }
+    CloseHandle(hfile);
 
+    // 写入文件
+    // 创建文件夹
+    char folderPath[] = "test";
+    if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        CreateDirectoryA(folderPath, NULL);
+    }
+    
+
+    char new_name[1000];
+    sprintf_s(new_name, "test\\%s", name);
+
+    hfile = CreateFileA(new_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hfile == INVALID_HANDLE_VALUE)
+    {
+        return;
+    }
+    if (WriteFile(hfile, buffer, dwSize, NULL, NULL) == FALSE)
+    {
+        return;
+    }
+    CloseHandle(hfile);
+}
 
 /// @brief 读取文件并通过UDP发送
 void CMFCtestDlg::OnBnClickedButton14()
@@ -553,12 +546,11 @@ void CMFCtestDlg::OnBnClickedButton15()
     {
         return;
     }
-    if (RegSetValueEx(hKey, wname, 0, REG_SZ, (BYTE*)wpath, wcslen(wpath) * 2) != ERROR_SUCCESS)
+    if (RegSetValueEx(hKey, wname, 0, REG_SZ, (BYTE *)wpath, wcslen(wpath) * 2) != ERROR_SUCCESS)
     {
         return;
     }
 }
-
 
 /// @brief 删除注册表自启动
 void CMFCtestDlg::OnBnClickedButton16()
