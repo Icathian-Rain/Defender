@@ -152,12 +152,25 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewWriteFile(
 {
     BOOL ret = OldWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
     Msg msg("WriteFile");
+
+    // 文件内容为字符串
     std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
     lpBuffer_tmp = GbkToUtf8(lpBuffer_tmp.c_str());
+
+    // 文件内容为二进制
+    // std::string lpBuffer_tmp = bytes2string((const BYTE*)lpBuffer, nNumberOfBytesToWrite);
+    
     msg.setItem("hFile", std::to_string((int)hFile));
     msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToWrite", std::to_string(nNumberOfBytesToWrite));
-    msg.setItem("lpNumberOfBytesWritten", std::to_string(*lpNumberOfBytesWritten));
+    if (lpNumberOfBytesWritten != NULL)
+    {
+        msg.setItem("lpNumberOfBytesWritten", std::to_string(*lpNumberOfBytesWritten));
+    }
+    else
+    {
+        msg.setItem("lpNumberOfBytesWritten", "NULL");
+    }
     msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
     client.send(msg.getMsg().c_str());
 
@@ -180,12 +193,33 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewReadFile(
 {
     BOOL ret = OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
     Msg msg("ReadFile");
-    std::string lpBuffer_tmp((char *)lpBuffer, *lpNumberOfBytesRead);
+
+    // 文件内容为字符串
+    std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToWrite);
+    lpBuffer_tmp = GbkToUtf8(lpBuffer_tmp.c_str());
+
+    // 文件内容为二进制
+    // std::string lpBuffer_tmp = bytes2string((const BYTE*)lpBuffer, nNumberOfBytesToRead);
+
     msg.setItem("hFile", std::to_string((int)hFile));
     msg.setItem("lpBuffer", lpBuffer_tmp);
     msg.setItem("nNumberOfBytesToRead", std::to_string(nNumberOfBytesToRead));
-    msg.setItem("lpNumberOfBytesRead", std::to_string(*lpNumberOfBytesRead));
-    msg.setItem("lpOverlapped/O结构的指针", std::to_string((int)lpOverlapped));
+    if (lpNumberOfBytesRead != NULL)
+    {
+        msg.setItem("lpNumberOfBytesRead", std::to_string(*lpNumberOfBytesRead));
+    }
+    else
+    {
+        msg.setItem("lpNumberOfBytesRead", "NULL");
+    }
+    if (lpOverlapped != NULL)
+    {
+        msg.setItem("lpOverlapped", std::to_string((int)lpOverlapped));
+    }
+    else
+    {
+        msg.setItem("lpOverlapped", "NULL");
+    }
     client.send(msg.getMsg().c_str());
     return ret;
 }
@@ -387,13 +421,13 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegQueryValueEx(
     // 信息构造
     Msg msg("RegQueryValueEx");
     std::string lpValueName_tmp = wchar2string(lpValueName);
-    std::string lpData_tmp = std::to_string(lpData, *lpcbData);
+    std::string lpData_tmp = std::string((char *)lpData, (int)*lpcbData);
     msg.setItem("hKey", std::to_string((int)hKey));
     msg.setItem("lpValueName", lpValueName_tmp);
     msg.setItem("lpReserved", std::to_string((int)lpReserved));
     msg.setItem("lpType", std::to_string(*lpType));
     msg.setItem("lpData", lpData_tmp);
-    msg.setItem("lpcbData", std::to_string((*lpcbData));
+    msg.setItem("lpcbData", std::to_string((*lpcbData)));
     client.send(msg.getMsg().c_str());
     return ret;
 }
