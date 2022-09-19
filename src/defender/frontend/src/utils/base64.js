@@ -1,7 +1,7 @@
 
 import { Base64 } from 'js-base64';
 
-function getEncode64(str) {
+function getEncode(str) {
     return Base64.encode(str);
 }
 
@@ -17,4 +17,4 @@ function getDecode(str){
     return res
 }
 
-export {getEncode64, getDecode}
+export {getEncode, getDecode}
