@@ -67,7 +67,7 @@ void Msg::setItem(const std::string& key, const std::string& value)
         flag = 1;
     }
     temp_key = my_replace(temp_key, "\\", "\\\\");
-    temp_key = base64_encode(temp_key);
+    // temp_key = base64_encode(temp_key);
     temp_value = my_replace(temp_value, "\\", "\\\\");
     temp_value = base64_encode(temp_value);
 

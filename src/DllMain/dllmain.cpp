@@ -364,7 +364,7 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewHeapFree(
         Msg msg("HeapFree");
         msg.setItem("hHeap", dword2hex((DWORD)hHeap));
         msg.setItem("dwFlags", std::to_string(dwFlags));
-        msg.setItem("lpMem", std::to_string((int)lpMem));
+        msg.setItem("lpMem", dword2hex((DWORD)lpMem));
         msg.setItem("ret", std::to_string(ret));
         client.send(msg.getMsg().c_str());
         releaseLock();
@@ -510,7 +510,7 @@ extern "C" __declspec(dllexport) LSTATUS WINAPI NewRegQueryValueEx(
     // 信息构造
     Msg msg("RegQueryValueEx");
     std::string lpValueName_tmp = wchar2string(lpValueName);
-    msg.setItem("hKey", std::to_string((int)hKey));
+    msg.setItem("hKey", dword2hex((DWORD)hKey));
     msg.setItem("lpValueName", lpValueName_tmp);
     msg.setItem("lpReserved", std::to_string((int)lpReserved));
     if(lpType != NULL)
