@@ -60,7 +60,7 @@ function analysis(msg, testInstanceName, heapList, dirList) {
         case "HeapFree":
             let lpMem = msg.info.lpMem;
             let index0 = heapList.indexOf(lpMem)
-            if (index0 == -1) {
+            if (index0 > -1) {
                 result.type = "error";
                 result.title = "高风险操作";
                 result.err = "堆重复释放";
