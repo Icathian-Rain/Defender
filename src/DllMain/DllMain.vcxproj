@@ -158,8 +158,10 @@
   <ItemGroup>
     <ClInclude Include="base64.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="lock.h" />
     <ClInclude Include="msg.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="utils.h" />
     <ClInclude Include="winudp.h" />
   </ItemGroup>
   <ItemGroup>
