@@ -391,6 +391,7 @@ void CMFCtestDlg::OnBnClickedButton1()
             http_msg += buffer[i];
             i++;
         }
+        memset(buffer, 0, sizeof(buffer));
     }
     freeaddrinfo(result);
     closesocket(sock);
