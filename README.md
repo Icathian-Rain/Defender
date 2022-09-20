@@ -6,34 +6,47 @@
     |-question\                         任务书
     |    |-软件安全 课程设计 实验指导书2022（整合）v1.9_plain.docx
     |    |-软件安全 课程设计 实验指导书2022（整合）v1.9_plain.pdf
-    |-README.md
+    |-README.md                         README
+    |-script\                           构建脚本
+    |    |-build.py                     将编译好的defender、dllmain、syringe、MFCtest移动到test目录下
     |-src\                              源代码
-    |    |-defender\                    图形化界面
-    |    |    |-app.go                  功能代码
-    |    |    |-build\                  
+    |    |-defender\                    可视化界面
+    |    |    |-app.go                  主app
+    |    |    |-build\
     |    |    |-frontend\               前端
-    |    |    |-go.mod
+    |    |    |-go.mod          
     |    |    |-go.sum
     |    |    |-main.go
-    |    |    |-processInfo\            进程相关类
+    |    |    |-processInfo\            进程相关函数
     |    |    |-README.md
     |    |    |-wails.json
     |    |-DllMain\                     DllMain
     |    |    |-.vs\
     |    |    |-base64.cpp              base64 C++实现
-    |    |    |-base64.h                
+    |    |    |-base64.h
+    |    |    |-Debug\
     |    |    |-dllmain.cpp             dllmain
-    |    |    |-msg.h                   通信信息封装类
-    |    |    |-winudp.h                udp server client封装类
+    |    |    |-lock.h                  锁实现
+    |    |    |-msg.h                   Msg类实现   
+    |    |    |-pch.cpp             
+    |    |    |-pch.h
+    |    |    |-utils.h                 工具头文件
+    |    |    |-winudp.h                windows udp实现
+    |    |-MFCtest\                     MFCtest
+    |    |    |-MFCtest.cpp
+    |    |    |-MFCtestDlg.cpp          Dlg实现
+    |    |    |-MFCtestDlg.h
+    |    |    |-windup.h                windows下udp实现
     |    |-syringe\                     注射器
-    |    |    |-syringe.cpp             注射器实现
-    |    |-testEXE\
-    |    |    |-testEXE.cpp             测试样例源代码
+    |    |    |-syringe.cpp              
     |-test\
+    |    |-defender.exe                 defender                 
+    |    |-DllMain.dll                  
     |    |-ez.exe
-    |    |-MFCApplication2.exe          32位测试样例
-    |    |-MFCApplication2_64.exe       64位测试样例
-
+    |    |-MFCApplication2.exe
+    |    |-MFCApplication2_64.exe
+    |    |-MFCtest.exe
+    |    |-syringe.exe
 ## 技术栈
 DllMain: C++ C
 
