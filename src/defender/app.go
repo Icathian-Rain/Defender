@@ -117,7 +117,7 @@ func (a *App) RunTest(filePath string) bool {
 		a.testInstance.syringe_pid = nil
 		return false
 	}
-	syringe_path := "C:\\Users\\22057\\Desktop\\softwareSecurity\\test\\syringe.exe"
+	syringe_path := "syringe.exe"
 	env := os.Environ()
 	procAttr := &os.ProcAttr{
 		Env: env,
@@ -169,7 +169,7 @@ func (a *App) StartUDP() {
 				a.testInstance.test_pid, _ = os.FindProcess(int(process.ProcessID))
 				a.testInstance.startTime = process.Time
 			} else {
-				fmt.Println(msg)
+				// fmt.Println(msg)
 				a.testInstance.msgs = append(a.testInstance.msgs, msg)
 				runtime.EventsEmit(a.ctx, "UDPMessage")
 			}

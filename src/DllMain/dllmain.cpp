@@ -235,10 +235,15 @@ extern "C" __declspec(dllexport) BOOL WINAPI NewReadFile(
 {
     // heap操作上锁
     setLock();
+    DWORD NumberOfBytesRead = 0;
+    if(lpNumberOfBytesRead == NULL)
+    {
+        lpNumberOfBytesRead = &NumberOfBytesRead;
+    }
     BOOL ret = OldReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);    
     Msg msg("ReadFile");
     // 文件内容为字符串
-    std::string lpBuffer_tmp((char *)lpBuffer, nNumberOfBytesToRead);
+    std::string lpBuffer_tmp((char *)lpBuffer, *lpNumberOfBytesRead);
     lpBuffer_tmp = GbkToUtf8(lpBuffer_tmp.c_str());
 
     // 文件内容为二进制
