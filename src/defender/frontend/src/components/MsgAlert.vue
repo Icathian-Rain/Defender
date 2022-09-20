@@ -1,8 +1,8 @@
 <template>
     <el-alert
         :closable="false"
-        :title="result.title + ' ' + msg['funcName']"
-        :type="result.type"
+        :title="msg['title'] + ' ' + msg['funcName']"
+        :type="msg['type']"
         :description="description"
         @click="dialogVisible = true"
         show-icon
@@ -13,8 +13,8 @@
             <template #extra>
                 <el-alert
                     :closable="false"
-                    :title="result.title"
-                    :type="result.type"
+                    :title="msg['title']"
+                    :type="msg['type']"
                 />
             </template>
             <el-descriptions-item v-for="(val, key, i) in props.msg['info']" align="center" min-width="60px">
@@ -37,18 +37,12 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { defineProps } from "vue";
 import { getEncode, getDecode } from "../utils/base64.js";
-import { GetFilePath } from "../../wailsjs/go/main/App"
-import analysis from "../utils/analysis";
 
-let result = ref({});
 let description = ref("");
 let dialogVisible = ref(false);
-let testInstanceName = "";
-let heapList = [];
-let dirList = [];
 
 const props = defineProps({
     msg: {
@@ -57,10 +51,5 @@ const props = defineProps({
     },
 });
 
-GetFilePath().then((res) => {
-    testInstanceName = res;
-});
-
-result.value = analysis(props.msg, testInstanceName, heapList, dirList);
-description.value = props.msg["time"] + " " + result.value["err"];
+description.value = props.msg["time"] + " " + props.msg["err"];
 </script>

@@ -24,7 +24,7 @@
         v-for="(msg, i) in msgs.slice((now_page - 1) * size, now_page * size)"
         :key="msg.id"
     >
-        <MsgAlert :msg="msg" />
+        <MsgAlert :msg="msg"/>
     </div>
 
     <el-pagination
@@ -40,8 +40,10 @@
 <script setup>
 import { ref } from "vue";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
-import { GetMsgs, ClearMsgs } from "../../wailsjs/go/main/App";
+import { GetMsgs, ClearMsgs, GetFilePath } from "../../wailsjs/go/main/App";
 import { EventsOff } from "../../wailsjs/runtime/runtime";
+import { getDecode } from "../utils/base64.js";
+import analysis from "../utils/analysis.js";
 import MsgAlert from "../components/MsgAlert.vue";
 import Selectors from "../components/Selectors.vue";
 
@@ -52,13 +54,25 @@ const now_page = ref(1);
 const selectedTypes = ref([]);
 const showSelector = ref(true);
 
+let testInstanceName = "";
+
+
+GetFilePath().then((res) => {
+    testInstanceName = res;
+});
+
+
 let reFreshMsgs = () => {
     GetMsgs().then((data) => {
+        let heapList = [];
+        let dirList = [];
         msgs.value = [];
         num.value = data.length;
         for (let i = 0; i < data.length; i++) {
             let msg = JSON.parse(data[i]);
+            analysis(msg, testInstanceName, heapList, dirList);
             if (selectedTypes.value.includes(msg["funcName"])) {
+                msg.id = i;
                 msgs.value.push(msg);
             }
         }
