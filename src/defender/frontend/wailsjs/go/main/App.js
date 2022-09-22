@@ -18,6 +18,10 @@ export function GetMsgs() {
   return window['go']['main']['App']['GetMsgs']();
 }
 
+export function GetStatistics() {
+  return window['go']['main']['App']['GetStatistics']();
+}
+
 export function GetSyringeProcessInfo() {
   return window['go']['main']['App']['GetSyringeProcessInfo']();
 }

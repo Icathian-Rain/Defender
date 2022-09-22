@@ -8,7 +8,9 @@ export function GetFilePath():Promise<string>;
 
 export function GetIsRunning():Promise<boolean>;
 
-export function GetMsgs():Promise<Array<string>>;
+export function GetMsgs():Promise<Array<main.Msg>>;
+
+export function GetStatistics():Promise<main.Statistics>;
 
 export function GetSyringeProcessInfo():Promise<main.ProcessInfo>;
 
