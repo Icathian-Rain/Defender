@@ -36,6 +36,24 @@
     <ClInclude Include="utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="hookMessagebox.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hookFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hookHeap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hookReg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hookNet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hookMemory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

@@ -158,7 +158,13 @@
   <ItemGroup>
     <ClInclude Include="base64.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="hookFile.h" />
+    <ClInclude Include="hookHeap.h" />
+    <ClInclude Include="hookMemory.h" />
+    <ClInclude Include="hookReg.h" />
+    <ClInclude Include="hookNet.h" />
     <ClInclude Include="lock.h" />
+    <ClInclude Include="hookMessagebox.h" />
     <ClInclude Include="msg.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils.h" />
