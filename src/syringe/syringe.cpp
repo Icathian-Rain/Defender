@@ -1,11 +1,17 @@
-﻿#include<iostream>
+﻿// 头文件
+#include<iostream>
 #include<cstdio>
 #include<windows.h>
-#include<detours.h>
 #include<thread>
+// detours库
+#include<detours.h>
+
+// 链接库
 #pragma comment(lib, "detours.lib")
+
 using namespace std;
 int main(int argc, char* argv[]) {
+    // 受限于go的os.startProcess函数，参数个数为1，即为要注入的测试程序路径
 	if (argc != 1)
 	{
 		return -1;
@@ -17,28 +23,25 @@ int main(int argc, char* argv[]) {
 	ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
 
-	// 路径配置
+    // 获取当前路径
 	WCHAR DirPath[MAX_PATH + 1];
-	char DLLPath[MAX_PATH + 1];
-	/*
-	wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug");	// dll文件夹
-	char DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\x64\\Debug\\DllMain.dll"; // dll的地址
-	*/
-	//wcscpy_s(DirPath, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug");	// dll文件夹
-	//DLLPath[MAX_PATH + 1] = "C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\DLLMain\\Debug\\DllMain.dll"; // dll的地址
 	GetCurrentDirectoryW(MAX_PATH, DirPath);
+
+    // 获取DLL路径，DLL应在当前路径下
+	char DLLPath[MAX_PATH + 1];
     GetCurrentDirectoryA(MAX_PATH, DLLPath);
     strcat_s(DLLPath, MAX_PATH, "\\DllMain.dll");
+
+    // 获取测试程序路径
 	WCHAR EXE[MAX_PATH + 1] = { 0 };
 	swprintf_s(EXE, MAX_PATH, L"%hs", argv[0]);
-	// wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\src\\testEXE\\X64\\Debug\\testEXE.exe");
-	// wcscpy_s(EXE, MAX_PATH, L"C:\\Users\\22057\\Desktop\\softwareSecurity\\MFCApplication2.exe");
+
+    // 启动测试程序
 	if (DetourCreateProcessWithDllEx(EXE, NULL, NULL, NULL, TRUE,
 		CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED, NULL, DirPath,
 		&si, &pi, DLLPath, NULL)) {
 		// 恢复线程
 		ResumeThread(pi.hThread);
-
 		WaitForSingleObject(pi.hProcess, INFINITE);
 	}
 	else {
