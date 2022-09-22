@@ -1,8 +1,8 @@
 <template>
     <el-alert
         :closable="false"
-        :title="msg['title'] + ' ' + msg['funcName']"
-        :type="msg['type']"
+        :title="msg['result']['title'] + ' ' + msg['funcName']"
+        :type="msg['result']['type']"
         :description="description"
         @click="dialogVisible = true"
         show-icon
@@ -13,8 +13,8 @@
             <template #extra>
                 <el-alert
                     :closable="false"
-                    :title="msg['title']"
-                    :type="msg['type']"
+                    :title="msg['result']['title']"
+                    :type="msg['result']['type']"
                 />
             </template>
             <el-descriptions-item v-for="(val, key, i) in props.msg['info']" align="center" min-width="60px">
@@ -51,5 +51,5 @@ const props = defineProps({
     },
 });
 
-description.value = props.msg["time"] + " " + props.msg["err"];
+description.value = props.msg["time"] + " " + props.msg["result"]["err"];
 </script>

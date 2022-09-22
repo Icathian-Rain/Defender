@@ -114,22 +114,22 @@ let refresh = () => {
         testInstance.value.isRunning = isRunning;
         percentage.value = isRunning ? 100 : 0;
     });
-    GetSyringeProcessInfo().then(
-        (processinfo) => {
-            testInstance.value.syringe_info.processName = processinfo.processName;
-            testInstance.value.syringe_info.processID = processinfo.processID;
-            testInstance.value.syringe_info.processDll = processinfo.processDll;
-            testInstance.value.syringe_info.processPriority = processinfo.processPriority;
-        }
-    );
-    GetTestProcessInfo().then(
-        (processinfo) => {
-            testInstance.value.testInstance_info.processName = processinfo.processName;
-            testInstance.value.testInstance_info.processID = processinfo.processID;
-            testInstance.value.testInstance_info.processDll = processinfo.processDll;
-            testInstance.value.testInstance_info.processPriority = processinfo.processPriority;
-        }
-    );
+    GetSyringeProcessInfo().then((processinfo) => {
+        testInstance.value.syringe_info.processName = processinfo.processName;
+        testInstance.value.syringe_info.processID = processinfo.processID;
+        testInstance.value.syringe_info.processDll = processinfo.processDll;
+        testInstance.value.syringe_info.processPriority =
+            processinfo.processPriority;
+    });
+    GetTestProcessInfo().then((processinfo) => {
+        testInstance.value.testInstance_info.processName =
+            processinfo.processName;
+        testInstance.value.testInstance_info.processID = processinfo.processID;
+        testInstance.value.testInstance_info.processDll =
+            processinfo.processDll;
+        testInstance.value.testInstance_info.processPriority =
+            processinfo.processPriority;
+    });
 };
 
 // 打开文件

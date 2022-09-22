@@ -30,18 +30,15 @@ import { ref } from "vue";
 let options = [
     {
         label: "主页",
-        icon: "el-icon-menu",
         path: "/",
     },
     {
         label: "行为监控",
-        icon: "el-icon-menu",
         path: "/monitor",
     },
     {
-        label: "系统设置",
-        icon: "el-icon-menu",
-        path: "/settings",
+        label: "统计分析",
+        path: "/statistics",
     },
 ];
 </script>

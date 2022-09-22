@@ -43,7 +43,6 @@ import { EventsOn } from "../../wailsjs/runtime/runtime";
 import { GetMsgs, ClearMsgs, GetFilePath } from "../../wailsjs/go/main/App";
 import { EventsOff } from "../../wailsjs/runtime/runtime";
 import { getDecode } from "../utils/base64.js";
-import analysis from "../utils/analysis.js";
 import MsgAlert from "../components/MsgAlert.vue";
 import Selectors from "../components/Selectors.vue";
 
@@ -64,13 +63,12 @@ GetFilePath().then((res) => {
 
 let reFreshMsgs = () => {
     GetMsgs().then((data) => {
-        let heapList = [];
-        let dirList = [];
+        console.log(data);
         msgs.value = [];
         num.value = data.length;
         for (let i = 0; i < data.length; i++) {
-            let msg = JSON.parse(data[i]);
-            analysis(msg, testInstanceName, heapList, dirList);
+            let msg = data[i];
+            
             if (selectedTypes.value.includes(msg["funcName"])) {
                 msg.id = i;
                 msgs.value.push(msg);
