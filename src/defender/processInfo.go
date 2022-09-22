@@ -1,4 +1,4 @@
-package processInfo
+package main
 
 import (
 	"path/filepath"
@@ -65,15 +65,13 @@ func getProcessPriority(HANDLE syscall.Handle) string {
 	return priority
 }
 
-func GetProcessInfo(pid uint32, mode ListMode) (string, uint32, string, []string, error) {
-	var name string
-	var priority string
-	var moduleList []string
-
+func getProcessInfo(pid uint32, mode ListMode, processInfo *ProcessInfo) {
+	// 获取进程ID
+	processInfo.ProcessID = pid
 	//获取进程句柄
 	var hProcess, err = syscall.OpenProcess(0x0400|0x0010, false, pid)
 	if err != nil {
-		return name, pid, priority, moduleList, err
+		return
 	}
 
 	//注意关闭句柄
@@ -84,13 +82,13 @@ func GetProcessInfo(pid uint32, mode ListMode) (string, uint32, string, []string
 	var n = uint32(len(buf))
 	var ret, _, _ = GetProcessImageFileNameA.Call(uintptr(hProcess), uintptr(unsafe.Pointer(&buf[0])), uintptr(n))
 	if ret == 0 {
-		return name, pid, priority, moduleList, err
+		return
 	}
-	name = getstring(uintptr(unsafe.Pointer(&buf[0])))
-	name = filepath.Base(name)
+	processInfo.ProcessName = getstring(uintptr(unsafe.Pointer(&buf[0])))
+	processInfo.ProcessName = filepath.Base(processInfo.ProcessName)
 
 	// 获取进程权限
-	priority = getProcessPriority(hProcess)
+	processInfo.ProcessPriority = getProcessPriority(hProcess)
 
 	//获取进程打开的模块数
 	var (
@@ -100,7 +98,7 @@ func GetProcessInfo(pid uint32, mode ListMode) (string, uint32, string, []string
 
 	r, _, err := enumProcessModulesEx.Call(uintptr(hProcess), uintptr(unsafe.Pointer(&hMods[0])), unsafe.Sizeof(hMods), uintptr(unsafe.Pointer(&cbNeeded)), uintptr(mode))
 	if r == 0 {
-		return name, pid, priority, moduleList, err
+		return
 	}
 
 	//计算模块数量
@@ -110,9 +108,9 @@ func GetProcessInfo(pid uint32, mode ListMode) (string, uint32, string, []string
 	for i := 0; i < modelength; i++ {
 		r, _, err = getModuleFileNameExW.Call(uintptr(hProcess), hMods[i], uintptr(unsafe.Pointer(&szModName)), unsafe.Sizeof(szModName))
 		if r == 0 {
-			return name, pid, priority, moduleList, err
+			return
 		}
-		moduleList = append(moduleList, syscall.UTF16ToString(szModName[:]))
+		processInfo.ProcessDll = append(processInfo.ProcessDll, syscall.UTF16ToString(szModName[:]))
 	}
-	return name, pid, priority, moduleList, nil
+	return
 }
