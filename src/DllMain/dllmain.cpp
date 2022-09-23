@@ -55,7 +55,7 @@ BOOL WINAPI DllMain(HMODULE hModule,
         DetourAttach(&(PVOID &)OldReadFile, NewReadFile);
 
         DetourAttach(&(PVOID &)OldHeapCreate, NewHeapCreate);
-        DetourAttach(&(PVOID &)OldHeapDestory, NewHeapDestory);
+        DetourAttach(&(PVOID &)OldHeapDestroy, NewHeapDestory);
         DetourAttach(&(PVOID&)OldHeapAlloc, NewHeapAlloc);
         DetourAttach(&(PVOID&)OldHeapFree, NewHeapFree);
 
