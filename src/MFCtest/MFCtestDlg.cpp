@@ -60,6 +60,17 @@ void path2fileName(char *path, char *fileName)
     strcpy_s(fileName, str.length() + 1, str.c_str());
 }
 
+void path2dir(char *path, char *dir)
+{
+    std::string str(path);
+    int pos = str.find_last_of("\\");
+    if (pos != std::string::npos)
+    {
+        str = str.substr(0, pos);
+    }
+    strcpy_s(dir, str.length() + 1, str.c_str());
+}
+
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 {
 }
@@ -464,13 +475,16 @@ void CMFCtestDlg::OnBnClickedButton3()
 void CMFCtestDlg::OnBnClickedButton13()
 {
     // TODO: 在此添加控件通知处理程序代码
+    char path[1000];
     char name[1000];
-
+    char dir[1000];
     // 获取当前程序路径
-    GetModuleFileNameA(NULL, name, sizeof(name));
-    path2fileName(name, name);
+    GetModuleFileNameA(NULL, path, sizeof(path));
+    path2fileName(path, name);
+    path2dir(path, dir);
+
     // 复制文件
-    HANDLE hfile = CreateFileA(name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hfile = CreateFileA(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hfile == INVALID_HANDLE_VALUE)
     {
         
@@ -487,7 +501,8 @@ void CMFCtestDlg::OnBnClickedButton13()
 
     // 写入文件
     // 创建文件夹
-    char folderPath[] = "test";
+    char folderPath[1000];
+    sprintf_s(folderPath, "%s\\test", dir);
     if ((GetFileAttributesA(folderPath) & FILE_ATTRIBUTE_DIRECTORY))
     {
         CreateDirectoryA(folderPath, NULL);
@@ -495,7 +510,7 @@ void CMFCtestDlg::OnBnClickedButton13()
     
 
     char new_name[1000];
-    sprintf_s(new_name, "test\\%s", name);
+    sprintf_s(new_name, "%s\\%s", folderPath, name);
 
     hfile = CreateFileA(new_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hfile == INVALID_HANDLE_VALUE)
