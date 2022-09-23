@@ -8,7 +8,10 @@
                 class="mr-4"
                 >清空信息</el-button
             >
-            <div class="inline-block cursor-pointer" @click="showSelector = !showSelector">
+            <div
+                class="inline-block cursor-pointer"
+                @click="showSelector = !showSelector"
+            >
                 <img
                     src="../assets/icon/select.svg"
                     alt=""
@@ -24,7 +27,7 @@
         v-for="(msg, i) in msgs.slice((now_page - 1) * size, now_page * size)"
         :key="msg.id"
     >
-        <MsgAlert :msg="msg"/>
+        <MsgAlert :msg="msg" />
     </div>
 
     <el-pagination
@@ -55,20 +58,17 @@ const showSelector = ref(true);
 
 let testInstanceName = "";
 
-
 GetFilePath().then((res) => {
     testInstanceName = res;
 });
 
-
 let reFreshMsgs = () => {
     GetMsgs().then((data) => {
-        console.log(data);
         msgs.value = [];
         num.value = data.length;
         for (let i = 0; i < data.length; i++) {
             let msg = data[i];
-            
+
             if (selectedTypes.value.includes(msg["funcName"])) {
                 msg.id = i;
                 msgs.value.push(msg);
