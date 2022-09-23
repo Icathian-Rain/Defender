@@ -35,7 +35,7 @@ type Result struct {
 func (a *App) analyzeMsg(msg *Msg) {
 	msg.Result.Type = "success"
 	msg.Result.Title = "低风险操作"
-	msg.Result.Err = "正常"
+	msg.Result.Err = ""
 	a.testInstance.statistics.TotalNum++
 	a.testInstance.statistics.SuccessNum++
 	// 判断
@@ -61,7 +61,7 @@ func (a *App) analyzeMsg(msg *Msg) {
 		if fileName == testInstanceName {
 			msg.Result.Type = "error"
 			msg.Result.Title = "高风险操作"
-			msg.Result.Err = "自我复制"
+			msg.Result.Err = msg.Result.Err + " " + "自我复制"
 			a.testInstance.statistics.ErrorNum++
 			a.testInstance.statistics.SuccessNum--
 		}
@@ -107,17 +107,17 @@ func (a *App) analyzeMsg(msg *Msg) {
 				break
 			}
 		}
-		if index != -1 {
-			msg.Result.Type = "error"
-			msg.Result.Title = "高风险操作"
-			msg.Result.Err = "注册表开机自启动"
-			a.testInstance.statistics.ErrorNum++
-			a.testInstance.statistics.SuccessNum--
-		} else {
+		if index == -1 {
 			msg.Result.Type = "warning"
 			msg.Result.Title = "中风险操作"
 			msg.Result.Err = "注册表操作"
 			a.testInstance.statistics.WarningNum++
+			a.testInstance.statistics.SuccessNum--
+		} else {
+			msg.Result.Type = "error"
+			msg.Result.Title = "高风险操作"
+			msg.Result.Err = msg.Result.Err + " " + "注册表开机自启动" 
+			a.testInstance.statistics.ErrorNum++
 			a.testInstance.statistics.SuccessNum--
 		}
 		a.testInstance.statistics.RegNum++
@@ -130,5 +130,8 @@ func (a *App) analyzeMsg(msg *Msg) {
 		a.testInstance.statistics.RegNum++
 	case "socket", "bind", "listen", "accept", "connect", "send", "recv", "sendto", "recvfrom":
 		a.testInstance.statistics.NetNum++
+	}
+	if msg.Result.Err == "" {
+		msg.Result.Err = "正常"
 	}
 }
