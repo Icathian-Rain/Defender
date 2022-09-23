@@ -1,23 +1,5 @@
 export namespace main {
 	
-	export class ProcessInfo {
-	    processName: string;
-	    processID: number;
-	    processDll: string[];
-	    processPriority: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new ProcessInfo(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.processName = source["processName"];
-	        this.processID = source["processID"];
-	        this.processDll = source["processDll"];
-	        this.processPriority = source["processPriority"];
-	    }
-	}
 	export class Config {
 	    syringePath: string;
 	    dllPath: string;
@@ -113,6 +95,24 @@ export namespace main {
 	        this.regNum = source["regNum"];
 	        this.netNum = source["netNum"];
 	        this.memoryNum = source["memoryNum"];
+	    }
+	}
+	export class ProcessInfo {
+	    processName: string;
+	    processID: number;
+	    processDll: string[];
+	    processPriority: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProcessInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.processName = source["processName"];
+	        this.processID = source["processID"];
+	        this.processDll = source["processDll"];
+	        this.processPriority = source["processPriority"];
 	    }
 	}
 
