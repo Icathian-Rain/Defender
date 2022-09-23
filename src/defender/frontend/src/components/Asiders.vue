@@ -40,6 +40,10 @@ let options = [
         label: "统计分析",
         path: "/statistics",
     },
+    {
+        label: "设置",
+        path: "/settings",
+    },
 ];
 </script>
 

@@ -2,22 +2,21 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"net"
 	"os"
-	"strings"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
 	ctx          context.Context // 上下文
 	testInstance Test            // Test instance
+	Config 	 Config          // 配置
 }
 
-//
+type Config struct {
+	SyringePath string `json:"syringePath"`
+	DllPath string `json:"dllPath"`
+}
+
 
 type Statistics struct {
 	TotalNum   int `json:"totalNum"`
@@ -54,6 +53,7 @@ func NewApp() *App {
 // 初始化
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.Config = Config{".\\syringe.exe", ".\\dllMain.dll"}
 	a.testInstance.filePath = ""
 	a.testInstance.startTime = ""
 	a.testInstance.isRunning = false
@@ -63,64 +63,9 @@ func (a *App) startup(ctx context.Context) {
 	a.testInstance.heapList = make([]string, 0)
 	a.testInstance.statistics = Statistics{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	a.StartUDP()
+	a.ImportConfig()
 }
 
-// 打开文件
-func (a *App) OpenEXEDialog() bool {
-	filePath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Open EXE",
-		Filters: []runtime.FileFilter{
-			{
-				DisplayName: "*.exe",
-				Pattern:     "*.exe",
-			},
-		},
-	})
-	if err != nil {
-		a.testInstance.filePath = ""
-		return false
-	}
-	a.testInstance.filePath = filePath
-	return true
 
-}
 
-// 开启UDP通信
-func (a *App) StartUDP() {
-	go func() {
-		udp_addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:4000")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		conn, err := net.ListenUDP("udp", udp_addr)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer conn.Close()
-		buf := make([]byte, 0xffff)
-		for {
-			n, _, err := conn.ReadFromUDP(buf)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			go func() {
-				rawMsg := string(buf[:n])
-				if strings.Contains(rawMsg, "processID") {
-					var process Process
-					json.Unmarshal([]byte(rawMsg), &process)
-					a.testInstance.test_pid, _ = os.FindProcess(int(process.ProcessID))
-					a.testInstance.startTime = process.Time
-				} else {
-					var msg Msg
-					json.Unmarshal([]byte(rawMsg), &msg)
-					a.analyzeMsg(&msg)
-					a.testInstance.msgs = append(a.testInstance.msgs, msg)
-					runtime.EventsEmit(a.ctx, "UDPMessage")
-				}
-			}()
-		}
-	}()
-}
+

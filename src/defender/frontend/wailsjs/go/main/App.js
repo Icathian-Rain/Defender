@@ -6,6 +6,18 @@ export function ClearMsgs() {
   return window['go']['main']['App']['ClearMsgs']();
 }
 
+export function ExportCurrentConfig() {
+  return window['go']['main']['App']['ExportCurrentConfig']();
+}
+
+export function ExportDefaultConfig() {
+  return window['go']['main']['App']['ExportDefaultConfig']();
+}
+
+export function GetConfig() {
+  return window['go']['main']['App']['GetConfig']();
+}
+
 export function GetFilePath() {
   return window['go']['main']['App']['GetFilePath']();
 }
@@ -30,12 +42,24 @@ export function GetTestProcessInfo() {
   return window['go']['main']['App']['GetTestProcessInfo']();
 }
 
+export function ImportConfig() {
+  return window['go']['main']['App']['ImportConfig']();
+}
+
 export function KillTest() {
   return window['go']['main']['App']['KillTest']();
 }
 
+export function OpenDllFile() {
+  return window['go']['main']['App']['OpenDllFile']();
+}
+
 export function OpenEXEDialog() {
   return window['go']['main']['App']['OpenEXEDialog']();
+}
+
+export function OpenSyringeFile() {
+  return window['go']['main']['App']['OpenSyringeFile']();
 }
 
 export function RunTest(arg1) {

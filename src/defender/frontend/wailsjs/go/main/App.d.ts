@@ -4,6 +4,12 @@ import {main} from '../models';
 
 export function ClearMsgs():Promise<void>;
 
+export function ExportCurrentConfig():Promise<void>;
+
+export function ExportDefaultConfig():Promise<void>;
+
+export function GetConfig():Promise<main.Config>;
+
 export function GetFilePath():Promise<string>;
 
 export function GetIsRunning():Promise<boolean>;
@@ -16,9 +22,15 @@ export function GetSyringeProcessInfo():Promise<main.ProcessInfo>;
 
 export function GetTestProcessInfo():Promise<main.ProcessInfo>;
 
+export function ImportConfig():Promise<void>;
+
 export function KillTest():Promise<boolean>;
 
+export function OpenDllFile():Promise<void>;
+
 export function OpenEXEDialog():Promise<boolean>;
+
+export function OpenSyringeFile():Promise<void>;
 
 export function RunTest(arg1:string):Promise<boolean>;
 
