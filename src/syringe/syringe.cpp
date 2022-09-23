@@ -9,10 +9,21 @@
 // 链接库
 #pragma comment(lib, "detours.lib")
 
+std::string getDir(std::string path) {
+    int pos = path.find_last_of("\\");
+    return path.substr(0, pos);
+}
+
+void string2wchar(std::string str, wchar_t* wchar) {
+    int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, wchar, len);
+}
+
+
 using namespace std;
 int main(int argc, char* argv[]) {
-    // 受限于go的os.startProcess函数，参数个数为1，即为要注入的测试程序路径
-	if (argc != 1)
+    // 受限于go的os.startProcess函数，参数个数为2，0为dll路径，1为目标程序路径
+	if (argc != 2)
 	{
 		return -1;
 	}
@@ -23,18 +34,19 @@ int main(int argc, char* argv[]) {
 	ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
 
-    // 获取当前路径
-	WCHAR DirPath[MAX_PATH + 1];
-	GetCurrentDirectoryW(MAX_PATH, DirPath);
 
-    // 获取DLL路径，DLL应在当前路径下
+    // 获取DLL路径，DLL路径为argv[0]
 	char DLLPath[MAX_PATH + 1];
-    GetCurrentDirectoryA(MAX_PATH, DLLPath);
-    strcat_s(DLLPath, MAX_PATH, "\\DllMain.dll");
+    sprintf_s(DLLPath, "%s", argv[0]);
 
-    // 获取测试程序路径
+    // 获取测试程序路径,测试程序路径为argv[1]
 	WCHAR EXE[MAX_PATH + 1] = { 0 };
-	swprintf_s(EXE, MAX_PATH, L"%hs", argv[0]);
+	swprintf_s(EXE, MAX_PATH, L"%hs", argv[1]);
+
+    // 获取测试程序所在目录
+    std::string dir = getDir(argv[1]);
+	WCHAR DirPath[MAX_PATH + 1];
+	swprintf_s(DirPath, MAX_PATH, L"%hs", dir.c_str());
 
     // 启动测试程序
 	if (DetourCreateProcessWithDllEx(EXE, NULL, NULL, NULL, TRUE,
