@@ -48,14 +48,16 @@ func (a *App) ClearMsgs() {
 // RunTest
 func (a *App) RunTest(filePath string) bool {
 	a.testInstance.filePath = filePath
+	a.ClearMsgs()
 	var length = len(filePath)
 	if length < 5 || filePath[length-4:] != ".exe" {
 		a.testInstance.isRunning = false
 		a.testInstance.syringe_pid = nil
 		return false
 	}
-	syringe_path := "C:\\Users\\22057\\Desktop\\softwareSecurity\\test\\syringe.exe"
-	// dir, _ := os.Getwd()
+	// syringe_path := "C:\\Users\\22057\\Desktop\\softwareSecurity\\test\\syringe.exe"
+	syringe_path := a.Config.SyringePath
+	dir, _ := os.Getwd()
 	env := os.Environ()
 	procAttr := &os.ProcAttr{
 		Env: env,
@@ -65,10 +67,10 @@ func (a *App) RunTest(filePath string) bool {
 			os.Stderr,
 		},
 		Sys: &syscall.SysProcAttr{HideWindow: true},
-		// Dir: dir,
-		Dir: "C:\\Users\\22057\\Desktop\\softwareSecurity\\test",
+		Dir: dir,
+		// Dir: "C:\\Users\\22057\\Desktop\\softwareSecurity\\test",
 	}
-	pid, err := os.StartProcess(syringe_path, []string{a.testInstance.filePath}, procAttr)
+	pid, err := os.StartProcess(syringe_path, []string{a.Config.DllPath,a.testInstance.filePath}, procAttr)
 	if err != nil {
 		a.testInstance.filePath = ""
 		a.testInstance.isRunning = false
