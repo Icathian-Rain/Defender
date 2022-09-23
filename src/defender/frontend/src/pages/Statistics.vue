@@ -145,12 +145,13 @@ onMounted(() => {
 // 刷新统计数据
 let reFresh = () => {
     GetStatistics().then((data) => {
+        // console.log(data);
         totalNum.value = data["totalNum"];
         barOption.series[0].data[0].value = data["successNum"];
         barOption.series[0].data[1].value = data["warningNum"];
         barOption.series[0].data[2].value = data["errorNum"];
         myBarChart.setOption(barOption);
-        pieOption.series[0].data[0].value = data["messageNum"];
+        pieOption.series[0].data[0].value = data["messageboxNum"];
         pieOption.series[0].data[1].value = data["fileNum"];
         pieOption.series[0].data[2].value = data["heapNum"];
         pieOption.series[0].data[3].value = data["regNum"];
@@ -160,9 +161,13 @@ let reFresh = () => {
 };
 
 // 监听UDP消息
-EventsOn("UDPMessage", () => {
+// EventsOn("UDPMessage", () => {
+//     reFresh();
+// });
+
+setInterval(() => {
     reFresh();
-});
+}, 1000);
 
 reFresh();
 </script>
