@@ -76,7 +76,7 @@ BOOL WINAPI DllMain(HMODULE hModule,
         DetourAttach(&(PVOID &)Oldrecv, Newrecv);
         DetourAttach(&(PVOID&)Oldsendto, Newsendto);
         DetourAttach(&(PVOID&)Oldrecvfrom, Newrecvfrom);
-        // DetourAttach(&(PVOID&)Oldmemcpy, Newmemcpy);
+        DetourAttach(&(PVOID&)Oldmemcpy, Newmemcpy);
         DetourTransactionCommit();
         releaseLock();
         break;
